@@ -67,17 +67,22 @@ export function Header() {
                   Admin
                 </Link>
               )}
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL.replace("=s96-c", "=s64-c")}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className="h-8 w-8 rounded-full border-2 border-border object-cover"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-medium text-white">
+                  {user.displayName?.[0] || "?"}
+                </div>
+              )}
               <button
                 onClick={signOut}
-                className="flex items-center gap-2 rounded-lg bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
+                className="rounded-lg bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
               >
-                {user.photoURL && (
-                  <img
-                    src={user.photoURL}
-                    alt=""
-                    className="h-6 w-6 rounded-full"
-                  />
-                )}
                 Sign out
               </button>
             </div>

@@ -342,14 +342,15 @@ export async function createOrUpdateUserProfile(
   userId: string,
   data: { displayName: string; email: string; avatarUrl: string }
 ): Promise<void> {
-  await setDoc(
-    doc(usersRef(), userId),
-    {
-      ...data,
-      createdAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+  const ref = doc(usersRef(), userId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    // Update profile without touching createdAt
+    await setDoc(ref, { ...data }, { merge: true });
+  } else {
+    // First time: create with createdAt
+    await setDoc(ref, { ...data, createdAt: serverTimestamp() });
+  }
 }
 
 // --- Admin: Topics ---
