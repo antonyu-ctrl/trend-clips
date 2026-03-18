@@ -49,17 +49,19 @@ async function searchVideos(
   query: string,
   apiKey: string,
   publishedAfter?: string,
-  maxResults: number = 25
+  maxResults: number = 10
 ): Promise<string[]> {
+  // Default to 7 days ago if no publishedAfter — ensures we get recent content
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const params: Record<string, string> = {
     part: "id",
     q: query,
     type: "video",
-    order: "viewCount",
+    order: "relevance",
     maxResults: maxResults.toString(),
+    publishedAfter: publishedAfter || sevenDaysAgo,
     key: apiKey,
   };
-  if (publishedAfter) params.publishedAfter = publishedAfter;
 
   const { data } = await axios.get(`${YOUTUBE_API_BASE}/search`, { params });
   return (data.items as YouTubeSearchItem[]).map((item) => item.id.videoId);
@@ -104,6 +106,10 @@ export async function fetchYouTubeForAllTopics(): Promise<{
         const videos = await getVideoDetails(videoIds, apiKey);
 
         for (const video of videos) {
+          // Skip videos with fewer than 10K views
+          const viewCount = parseInt(video.statistics.viewCount || "0");
+          if (viewCount < 10000) continue;
+
           const thumbnail =
             video.snippet.thumbnails.high?.url ||
             video.snippet.thumbnails.medium?.url ||
@@ -126,7 +132,7 @@ export async function fetchYouTubeForAllTopics(): Promise<{
             category: topic.defaultCategory,
             format: videoIsShort ? "short" : "clip",
             tags: [...new Set(tags)],
-            viewCount: parseInt(video.statistics.viewCount || "0"),
+            viewCount,
             fetchedAt: FieldValue.serverTimestamp(),
           });
           totalFetched++;

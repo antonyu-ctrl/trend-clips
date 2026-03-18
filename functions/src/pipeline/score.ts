@@ -4,14 +4,19 @@ export function computeScore(
   upvotes: number,
   downvotes: number,
   viewCount: number,
-  fetchedAtSeconds: number,
+  createdAtSeconds: number,
   nowSeconds: number
 ): number {
   const voteScore = (upvotes - downvotes) * 2;
-  const viewScore = Math.log10(viewCount + 1);
-  const hoursSinceFetched = (nowSeconds - fetchedAtSeconds) / 3600;
-  const recencyBoost = Math.max(0, 10 - hoursSinceFetched / 6);
-  return voteScore + viewScore + recencyBoost;
+
+  // Recency is the primary factor (0-100 points, decays over 30 days)
+  const daysSinceCreated = (nowSeconds - createdAtSeconds) / 86400;
+  const recencyScore = Math.max(0, 100 - (daysSinceCreated * 100) / 30);
+
+  // View count is secondary (0-20 points, log scale)
+  const viewScore = Math.min(20, Math.log10(viewCount + 1) * 2.5);
+
+  return recencyScore + viewScore + voteScore;
 }
 
 export async function rescoreAllVideos(): Promise<number> {
@@ -26,7 +31,7 @@ export async function rescoreAllVideos(): Promise<number> {
 
   for (const doc of snap.docs) {
     const data = doc.data();
-    const fetchedAt = data.fetchedAt?.seconds || nowSeconds;
+    const fetchedAt = data.createdAt?.seconds || data.fetchedAt?.seconds || nowSeconds;
     const newScore = computeScore(
       data.upvotes || 0,
       data.downvotes || 0,

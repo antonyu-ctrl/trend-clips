@@ -38,23 +38,23 @@ export async function cleanupStaleVideos(): Promise<{
     await new Promise((r) => setTimeout(r, 100));
   }
 
-  // For TikTok/Instagram: mark videos not refreshed in 30 days as stale
+  // Auto-expire: delete all videos older than 30 days (any platform)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  for (const platform of ["tiktok", "instagram"]) {
-    const staleSnap = await db
-      .collection("videos")
-      .where("platform", "==", platform)
-      .where("status", "==", "active")
-      .where("fetchedAt", "<", thirtyDaysAgo)
-      .get();
+  const expiredSnap = await db
+    .collection("videos")
+    .where("createdAt", "<", thirtyDaysAgo)
+    .get();
 
-    for (const doc of staleSnap.docs) {
-      await doc.ref.update({ status: "unavailable" });
-      removed++;
-    }
-    checked += staleSnap.size;
+  for (const doc of expiredSnap.docs) {
+    await doc.ref.delete();
+    removed++;
+  }
+  checked += expiredSnap.size;
+
+  if (expiredSnap.size > 0) {
+    console.log(`Auto-expired ${expiredSnap.size} videos older than 30 days`);
   }
 
   return { checked, removed };
