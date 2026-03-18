@@ -1,0 +1,8 @@
+node_modules/
+.next/
+functions/lib/
+.env.local
+.env*.local
+*.log
+.firebase/
+.claude/
