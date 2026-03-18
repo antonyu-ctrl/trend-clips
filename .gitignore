@@ -6,3 +6,4 @@ functions/lib/
 *.log
 .firebase/
 .claude/
+.vercel
