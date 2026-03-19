@@ -28,6 +28,7 @@ export interface TopicDoc {
   searchQueries: string[];
   defaultCategory: string;
   isActive: boolean;
+  languages?: string[];
 }
 
 export async function getActiveTopics(): Promise<

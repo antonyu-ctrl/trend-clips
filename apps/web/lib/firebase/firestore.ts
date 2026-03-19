@@ -368,6 +368,7 @@ export async function createTopic(data: {
   searchQueries: string[];
   defaultCategory: string;
   isActive: boolean;
+  languages?: string[];
 }): Promise<string> {
   const ref = doc(topicsRef());
   await setDoc(ref, data);
@@ -381,6 +382,7 @@ export async function updateTopic(
     searchQueries: string[];
     defaultCategory: string;
     isActive: boolean;
+    languages?: string[];
   }>
 ): Promise<void> {
   await updateDoc(doc(topicsRef(), topicId), data);

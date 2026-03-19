@@ -10,12 +10,24 @@ import {
 } from "@/lib/firebase/firestore";
 import type { Category } from "@/lib/types";
 
+const LANGUAGE_OPTIONS = [
+  { code: "en", label: "English" },
+  { code: "ko", label: "Korean" },
+  { code: "ja", label: "Japanese" },
+  { code: "es", label: "Spanish" },
+  { code: "fr", label: "French" },
+  { code: "de", label: "German" },
+  { code: "pt", label: "Portuguese" },
+  { code: "zh", label: "Chinese" },
+];
+
 interface Topic {
   id: string;
   name: string;
   searchQueries: string[];
   defaultCategory: string;
   isActive: boolean;
+  languages?: string[];
 }
 
 export default function AdminTopicsPage() {
@@ -30,6 +42,7 @@ export default function AdminTopicsPage() {
   const [formQueries, setFormQueries] = useState("");
   const [formCategory, setFormCategory] = useState("");
   const [formActive, setFormActive] = useState(true);
+  const [formLanguages, setFormLanguages] = useState<string[]>(["en"]);
   const [saving, setSaving] = useState(false);
 
   async function loadData() {
@@ -48,6 +61,7 @@ export default function AdminTopicsPage() {
     setFormQueries("");
     setFormCategory(categories[0]?.slug || "");
     setFormActive(true);
+    setFormLanguages(["en"]);
     setEditing(null);
     setShowForm(false);
   }
@@ -57,8 +71,15 @@ export default function AdminTopicsPage() {
     setFormQueries(topic.searchQueries.join("\n"));
     setFormCategory(topic.defaultCategory);
     setFormActive(topic.isActive);
+    setFormLanguages(topic.languages || ["en"]);
     setEditing(topic.id);
     setShowForm(true);
+  }
+
+  function toggleLanguage(code: string) {
+    setFormLanguages((prev) =>
+      prev.includes(code) ? prev.filter((l) => l !== code) : [...prev, code]
+    );
   }
 
   async function handleSave() {
@@ -72,6 +93,7 @@ export default function AdminTopicsPage() {
           searchQueries: queries,
           defaultCategory: formCategory,
           isActive: formActive,
+          languages: formLanguages,
         });
       } else {
         await createTopic({
@@ -79,6 +101,7 @@ export default function AdminTopicsPage() {
           searchQueries: queries,
           defaultCategory: formCategory,
           isActive: formActive,
+          languages: formLanguages,
         });
       }
       await loadData();
@@ -171,6 +194,30 @@ export default function AdminTopicsPage() {
                 placeholder={"ai tools 2026\nchatgpt tutorial\nbest ai apps"}
               />
             </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-sm text-text-secondary">
+                Languages (videos will be filtered to these languages)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {LANGUAGE_OPTIONS.map((lang) => (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => toggleLanguage(lang.code)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                      formLanguages.includes(lang.code)
+                        ? "bg-accent text-white"
+                        : "bg-background text-text-secondary hover:bg-surface-hover"
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+              {formLanguages.length === 0 && (
+                <p className="mt-1 text-xs text-red-400">Select at least one language</p>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -223,7 +270,7 @@ export default function AdminTopicsPage() {
                 </span>
               </div>
               <div className="mt-1 text-sm text-text-muted">
-                Category: {topic.defaultCategory} · {topic.searchQueries.length} queries
+                Category: {topic.defaultCategory} · {topic.searchQueries.length} queries · Lang: {(topic.languages || ["en"]).join(", ")}
               </div>
               <div className="mt-1 flex flex-wrap gap-1">
                 {topic.searchQueries.map((q) => (

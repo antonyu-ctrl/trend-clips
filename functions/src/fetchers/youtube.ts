@@ -20,6 +20,8 @@ interface YouTubeVideoItem {
     };
     tags?: string[];
     publishedAt: string;
+    defaultAudioLanguage?: string;
+    defaultLanguage?: string;
   };
   statistics: {
     viewCount?: string;
@@ -49,7 +51,8 @@ async function searchVideos(
   query: string,
   apiKey: string,
   publishedAfter?: string,
-  maxResults: number = 10
+  maxResults: number = 10,
+  relevanceLanguage?: string
 ): Promise<string[]> {
   // Default to 7 days ago if no publishedAfter — ensures we get recent content
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -62,6 +65,10 @@ async function searchVideos(
     publishedAfter: publishedAfter || sevenDaysAgo,
     key: apiKey,
   };
+
+  if (relevanceLanguage) {
+    params.relevanceLanguage = relevanceLanguage;
+  }
 
   const { data } = await axios.get(`${YOUTUBE_API_BASE}/search`, { params });
   return (data.items as YouTubeSearchItem[]).map((item) => item.id.videoId);
@@ -92,6 +99,11 @@ export async function fetchYouTubeForAllTopics(): Promise<{
   const errors: string[] = [];
 
   for (const topic of topics) {
+    // Languages to filter by — default to English if not set
+    const languages: string[] = topic.languages && topic.languages.length > 0
+      ? topic.languages
+      : ["en"];
+
     for (const query of topic.searchQueries) {
       try {
         // Get last fetch timestamp for this topic+query
@@ -102,13 +114,26 @@ export async function fetchYouTubeForAllTopics(): Promise<{
           ? stateSnap.data()?.lastFetchedAt?.toDate()?.toISOString()
           : undefined;
 
-        const videoIds = await searchVideos(query, apiKey, lastFetched);
+        // Search once per language, deduplicate results
+        const allVideoIds = new Set<string>();
+        for (const lang of languages) {
+          const ids = await searchVideos(query, apiKey, lastFetched, 10, lang);
+          ids.forEach((id) => allVideoIds.add(id));
+        }
+
+        const videoIds = Array.from(allVideoIds);
         const videos = await getVideoDetails(videoIds, apiKey);
 
         for (const video of videos) {
           // Skip videos with fewer than 10K views
           const viewCount = parseInt(video.statistics.viewCount || "0");
           if (viewCount < 10000) continue;
+
+          // Language filter: skip if audio language is set and not in allowed list
+          const audioLang = video.snippet.defaultAudioLanguage?.toLowerCase();
+          if (audioLang && !languages.some((lang) => audioLang.startsWith(lang))) {
+            continue;
+          }
 
           const thumbnail =
             video.snippet.thumbnails.high?.url ||
