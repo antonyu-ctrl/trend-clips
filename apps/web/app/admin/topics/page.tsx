@@ -113,7 +113,7 @@ export default function AdminTopicsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Topics</h1>
           <p className="text-sm text-text-secondary">
@@ -122,7 +122,7 @@ export default function AdminTopicsPage() {
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 transition-colors"
+          className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 transition-colors sm:w-auto"
         >
           + Add Topic
         </button>
@@ -209,35 +209,33 @@ export default function AdminTopicsPage() {
             key={topic.id}
             className="rounded-lg border border-border bg-surface p-4"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-text-primary">{topic.name}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      topic.isActive
-                        ? "bg-green-500/10 text-green-400"
-                        : "bg-red-500/10 text-red-400"
-                    }`}
-                  >
-                    {topic.isActive ? "Active" : "Paused"}
-                  </span>
-                </div>
-                <div className="mt-1 text-sm text-text-muted">
-                  Category: {topic.defaultCategory} · {topic.searchQueries.length} queries
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {topic.searchQueries.map((q) => (
-                    <span
-                      key={q}
-                      className="rounded bg-background px-2 py-0.5 text-xs text-text-secondary"
-                    >
-                      {q}
-                    </span>
-                  ))}
-                </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-text-primary">{topic.name}</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    topic.isActive
+                      ? "bg-green-500/10 text-green-400"
+                      : "bg-red-500/10 text-red-400"
+                  }`}
+                >
+                  {topic.isActive ? "Active" : "Paused"}
+                </span>
               </div>
-              <div className="flex gap-2">
+              <div className="mt-1 text-sm text-text-muted">
+                Category: {topic.defaultCategory} · {topic.searchQueries.length} queries
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {topic.searchQueries.map((q) => (
+                  <span
+                    key={q}
+                    className="rounded bg-background px-2 py-0.5 text-xs text-text-secondary"
+                  >
+                    {q}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   onClick={() => handleToggleActive(topic)}
                   className="rounded-md px-3 py-1 text-sm text-text-secondary hover:bg-surface-hover transition-colors"

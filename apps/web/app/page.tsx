@@ -75,7 +75,7 @@ export default function HomePage() {
           </Link>
         </div>
         {clips.length > 0 ? (
-          <VideoGrid videos={clips} />
+          <VideoGrid videos={clips} format="clip" />
         ) : (
           <p className="text-text-muted">No clips found yet.</p>
         )}
@@ -95,7 +95,7 @@ export default function HomePage() {
           </Link>
         </div>
         {shorts.length > 0 ? (
-          <VideoGrid videos={shorts} />
+          <VideoGrid videos={shorts} format="short" />
         ) : (
           <p className="text-text-muted">No shorts found yet.</p>
         )}

@@ -75,7 +75,7 @@ export default function ClipsPage() {
         </div>
       ) : (
         <>
-          <VideoGrid videos={videos} />
+          <VideoGrid videos={videos} format="clip" />
           {hasMore && (
             <div className="flex justify-center pt-4">
               <button

@@ -75,7 +75,7 @@ export default function ShortsPage() {
         </div>
       ) : (
         <>
-          <VideoGrid videos={videos} />
+          <VideoGrid videos={videos} format="short" />
           {hasMore && (
             <div className="flex justify-center pt-4">
               <button

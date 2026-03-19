@@ -11,9 +11,10 @@ import {
 
 interface VideoCardProps {
   video: Video;
+  compact?: boolean;
 }
 
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, compact }: VideoCardProps) {
   const formatColor = getFormatColor(video.format);
   const formatLabel = getFormatLabel(video.format);
   const netVotes = video.upvotes - video.downvotes;
@@ -24,7 +25,7 @@ export function VideoCard({ video }: VideoCardProps) {
         {/* Thumbnail */}
         <div
           className={`relative overflow-hidden ${
-            video.format === "short" ? "aspect-[9/16] max-h-72" : "aspect-video"
+            video.format === "short" ? "aspect-[9/16]" : "aspect-video"
           }`}
         >
           <Image
@@ -32,51 +33,57 @@ export function VideoCard({ video }: VideoCardProps) {
             alt={video.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes={
+              compact
+                ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            }
           />
           {/* Format badge */}
           <span
-            className={`absolute left-2 top-2 rounded-md px-2 py-0.5 text-xs font-semibold text-white ${formatColor}`}
+            className={`absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white ${formatColor} ${compact ? "sm:px-2 sm:text-xs" : "px-2 text-xs"}`}
           >
             {formatLabel}
           </span>
           {/* View count */}
-          <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-xs text-white">
+          <span className={`absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-white ${compact ? "text-[10px] sm:text-xs" : "text-xs"}`}>
             {formatViewCount(video.viewCount)} views
           </span>
         </div>
 
         {/* Info */}
-        <div className="p-3">
-          <h3 className="line-clamp-2 text-sm font-medium leading-snug text-text-primary">
+        <div className={compact ? "p-2" : "p-3"}>
+          <h3 className={`line-clamp-2 font-medium leading-snug text-text-primary ${compact ? "text-xs" : "text-sm"}`}>
             {video.title}
           </h3>
-          <div className="mt-2 flex items-center justify-between">
-            {/* Tags */}
-            <div className="flex flex-wrap gap-1">
-              {video.tags.slice(0, 2).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent"
-                >
-                  {tag}
-                </span>
-              ))}
+          {!compact && (
+            <div className="mt-2 flex items-center justify-between">
+              {/* Tags */}
+              <div className="flex flex-wrap gap-1">
+                {video.tags.slice(0, 2).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              {/* Votes */}
+              <span
+                className={`text-xs font-medium ${
+                  netVotes > 0
+                    ? "text-upvote"
+                    : netVotes < 0
+                      ? "text-downvote"
+                      : "text-text-muted"
+                }`}
+              >
+                {netVotes > 0 ? "+" : ""}
+                {netVotes}
+              </span>
             </div>
-            {/* Votes */}
-            <span
-              className={`text-xs font-medium ${
-                netVotes > 0
-                  ? "text-upvote"
-                  : netVotes < 0
-                    ? "text-downvote"
-                    : "text-text-muted"
-              }`}
-            >
-              {netVotes > 0 ? "+" : ""}
-              {netVotes}
-            </span>
-          </div>
+          )}
         </div>
       </div>
     </Link>
