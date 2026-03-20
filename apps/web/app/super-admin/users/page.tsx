@@ -45,12 +45,12 @@ export default function UsersPage() {
                 </td>
                 <td className="px-4 py-3 text-text-secondary">{u.email}</td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-                    u.tier === "invited" ? "bg-accent/10 text-accent" :
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    u.tier === "admin" ? "bg-red-500/10 text-red-500" :
                     u.tier === "pro" ? "bg-green-500/10 text-green-500" :
                     "bg-gray-500/10 text-gray-500"
                   }`}>
-                    {u.tier || "free"}
+                    {u.tier === "admin" ? "Super Admin" : u.tier === "pro" ? "Pro" : "Free"}
                   </span>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-text-secondary">{u.inviteCode || "—"}</td>

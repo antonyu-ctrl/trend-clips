@@ -31,7 +31,9 @@ export default function SettingsPage() {
         <div className="space-y-2 text-sm text-text-secondary">
           <p><span className="font-medium text-text-primary">Name:</span> {userProfile?.displayName}</p>
           <p><span className="font-medium text-text-primary">Email:</span> {userProfile?.email}</p>
-          <p><span className="font-medium text-text-primary">Tier:</span> <span className="capitalize">{userProfile?.tier || "free"}</span></p>
+          <p><span className="font-medium text-text-primary">Tier:</span> <span className="capitalize">{userProfile?.tier === "admin" ? "Super Admin" : userProfile?.tier || "free"}</span></p>
+          <p><span className="font-medium text-text-primary">Categories:</span> {userProfile?.tier === "admin" ? "Unlimited" : `${userProfile?.maxCategories || 3} max`}</p>
+          <p><span className="font-medium text-text-primary">Topics per category:</span> {userProfile?.tier === "admin" ? "Unlimited" : `${userProfile?.maxTopics || 3} max`}</p>
         </div>
       </div>
 
@@ -39,7 +41,7 @@ export default function SettingsPage() {
         <div className="rounded-xl border border-border bg-surface p-6">
           <h2 className="mb-4 text-lg font-semibold text-text-primary">Redeem Invite Code</h2>
           <p className="mb-4 text-sm text-text-secondary">
-            Enter an invite code to unlock unlimited categories and topics.
+            Enter an invite code to upgrade to Pro (5 categories, 10 topics per category).
           </p>
           <div className="flex gap-3">
             <input

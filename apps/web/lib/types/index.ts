@@ -44,7 +44,7 @@ export interface Topic {
   languages?: string[];
 }
 
-export type UserTier = "free" | "invited" | "pro";
+export type UserTier = "free" | "pro" | "admin";
 
 export interface UserProfile {
   id: string;

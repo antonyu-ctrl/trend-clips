@@ -15,7 +15,7 @@ import {
   type User,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
-import { createOrUpdateUserProfile, getUserProfile } from "@/lib/firebase/firestore";
+import { createOrUpdateUserProfile, getUserProfile, promoteToAdmin } from "@/lib/firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 
 interface AuthContextValue {
@@ -49,13 +49,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (firebaseUser) {
         const tokenResult = await firebaseUser.getIdTokenResult();
-        setIsAdmin(tokenResult.claims.admin === true);
+        const adminClaim = tokenResult.claims.admin === true;
+        setIsAdmin(adminClaim);
 
         await createOrUpdateUserProfile(firebaseUser.uid, {
           displayName: firebaseUser.displayName || "Anonymous",
           email: firebaseUser.email || "",
           avatarUrl: firebaseUser.photoURL || "",
         });
+
+        // Auto-promote admin users to "admin" tier with unlimited access
+        if (adminClaim) {
+          await promoteToAdmin(firebaseUser.uid);
+        }
 
         const profile = await getUserProfile(firebaseUser.uid);
         setUserProfile(profile);

@@ -59,7 +59,7 @@ service cloud.firestore {
     match /inviteCodes/{code} {
       allow read: if isAuthenticated();
       allow create: if isAdmin();
-      allow update: if isAuthenticated();
+      allow update: if isAuthenticated() && (!resource.data.isUsed || isAdmin());
     }
 
     // Quota usage: Cloud Functions only

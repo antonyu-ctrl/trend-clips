@@ -590,15 +590,27 @@ export async function redeemInviteCode(code: string, userId: string): Promise<bo
     usedAt: serverTimestamp(),
   });
 
-  // Upgrade user tier
+  // Upgrade user tier to pro
   await updateDoc(doc(usersRef(), userId), {
-    tier: "invited",
-    maxCategories: 999,
-    maxTopics: 999,
+    tier: "pro",
+    maxCategories: 5,
+    maxTopics: 10,
     inviteCode: code,
   });
 
   return true;
+}
+
+// --- Admin Tier Promotion ---
+export async function promoteToAdmin(userId: string): Promise<void> {
+  const profile = await getUserProfile(userId);
+  if (profile && profile.tier !== "admin") {
+    await updateDoc(doc(usersRef(), userId), {
+      tier: "admin",
+      maxCategories: 999,
+      maxTopics: 999,
+    });
+  }
 }
 
 // --- Super Admin: Invite Code Management ---
