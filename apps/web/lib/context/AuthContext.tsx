@@ -9,8 +9,7 @@ import {
 } from "react";
 import {
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   type User,
@@ -44,9 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    // Handle redirect result on page load
-    getRedirectResult(getClientAuth()).catch(() => {});
-
     const unsubscribe = onAuthStateChanged(getClientAuth(), async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
@@ -79,7 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithRedirect(getClientAuth(), provider);
+    try {
+      await signInWithPopup(getClientAuth(), provider);
+    } catch (err: unknown) {
+      // If popup is blocked or closed, log but don't crash
+      const error = err as { code?: string };
+      if (error.code !== "auth/popup-closed-by-user") {
+        console.error("Sign-in error:", err);
+      }
+    }
   };
 
   const signOut = async () => {
