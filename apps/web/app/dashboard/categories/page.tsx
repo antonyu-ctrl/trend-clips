@@ -60,9 +60,9 @@ export default function DashboardCategoriesPage() {
   async function startNew() {
     if (!user || !userProfile) return;
     const count = await getUserCategoryCount(user.uid);
-    if (count >= userProfile.maxCategories) {
+    if (count >= (userProfile.maxCategories || 3)) {
       setLimitMessage(
-        `You've reached the maximum of ${userProfile.maxCategories} categories for your ${userProfile.tier} tier. Enter an invite code in Settings to unlock more.`
+        `You've reached the maximum of ${(userProfile.maxCategories || 3)} categories for your ${userProfile.tier} tier. Enter an invite code in Settings to unlock more.`
       );
       return;
     }
@@ -122,7 +122,7 @@ export default function DashboardCategoriesPage() {
           <h2 className="text-lg font-semibold text-text-primary">My Categories</h2>
           {userProfile?.tier === "free" && (
             <p className="text-sm text-text-secondary">
-              {categories.length}/{userProfile.maxCategories} categories used
+              {categories.length}/{(userProfile.maxCategories || 3)} categories used
             </p>
           )}
         </div>

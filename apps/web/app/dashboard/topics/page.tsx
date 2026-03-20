@@ -83,7 +83,8 @@ export default function DashboardTopicsPage() {
   async function startNew() {
     if (!user || !userProfile) return;
     const count = await getUserTopicCount(user.uid);
-    if (count >= userProfile.maxTopics) {
+    const maxTopics = userProfile.maxTopics || 5;
+    if (count >= maxTopics) {
       setLimitMessage(
         `You've reached the maximum of ${userProfile.maxTopics} topics for your ${userProfile.tier} tier. Enter an invite code in Settings to unlock more.`
       );
