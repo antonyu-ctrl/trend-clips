@@ -4,10 +4,128 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { VideoGrid } from "@/components/video/VideoGrid";
 import { CategoryNav } from "@/components/category/CategoryNav";
-import { getVideosByFormat, getCategories } from "@/lib/firebase/firestore";
+import {
+  getVideosByFormat,
+  getCategories,
+  getUserCategories,
+  getUserVideos,
+  getUserVideosByCategory,
+} from "@/lib/firebase/firestore";
+import { useAuth } from "@/lib/context/AuthContext";
 import type { Video, Category } from "@/lib/types";
 
-export default function HomePage() {
+function PersonalizedFeed({ userId }: { userId: string }) {
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getUserCategories(userId).then((cats) => {
+      setCategories(cats);
+    });
+  }, [userId]);
+
+  useEffect(() => {
+    setLoading(true);
+    const fetchVideos = activeCategory
+      ? getUserVideosByCategory(userId, activeCategory, 20)
+      : getUserVideos(userId, 20);
+
+    fetchVideos.then((result) => {
+      setVideos(result.videos);
+      setLoading(false);
+    });
+  }, [userId, activeCategory]);
+
+  if (loading && categories.length === 0) {
+    return <LoadingSkeleton />;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* User's category nav */}
+      {categories.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              activeCategory === null
+                ? "bg-accent text-white"
+                : "bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.slug)}
+              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                activeCategory === cat.slug
+                  ? "bg-accent text-white"
+                  : "bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {loading ? (
+        <LoadingSkeleton />
+      ) : videos.length > 0 ? (
+        <section>
+          <h2 className="mb-4 text-2xl font-bold text-text-primary">
+            🎯 Your Feed
+          </h2>
+          <VideoGrid videos={videos} format="clip" />
+        </section>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-surface p-12 text-center">
+          <div className="text-4xl">📭</div>
+          <h2 className="text-lg font-semibold text-text-primary">
+            No videos yet
+          </h2>
+          <p className="max-w-md text-sm text-text-secondary">
+            Videos will appear here after the next fetch cycle (every 6 hours).
+            Make sure you have active topics with search queries.
+          </p>
+          <Link
+            href="/dashboard/topics"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
+          >
+            Manage Topics →
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NoCategoriesBanner() {
+  return (
+    <div className="mb-8 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 px-6 py-4">
+      <div>
+        <h3 className="font-semibold text-text-primary">
+          Customize your feed
+        </h3>
+        <p className="text-sm text-text-secondary">
+          Create categories and topics to get a personalized video feed.
+        </p>
+      </div>
+      <Link
+        href="/dashboard/categories"
+        className="whitespace-nowrap rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
+      >
+        Get Started →
+      </Link>
+    </div>
+  );
+}
+
+function GlobalFeed() {
   const [clips, setClips] = useState<Video[]>([]);
   const [shorts, setShorts] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -28,40 +146,12 @@ export default function HomePage() {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="space-y-10">
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-8 w-20 animate-pulse rounded-full bg-surface"
-            />
-          ))}
-        </div>
-        {[1, 2].map((section) => (
-          <div key={section} className="space-y-4">
-            <div className="h-7 w-48 animate-pulse rounded bg-surface" />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="space-y-3">
-                  <div className="aspect-video animate-pulse rounded-xl bg-surface" />
-                  <div className="h-4 w-3/4 animate-pulse rounded bg-surface" />
-                  <div className="h-3 w-1/2 animate-pulse rounded bg-surface" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-10">
       <CategoryNav categories={categories} />
 
-      {/* Top YouTube Clips */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-text-primary">
@@ -81,7 +171,6 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Top YouTube Shorts */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-text-primary">
@@ -101,5 +190,65 @@ export default function HomePage() {
         )}
       </section>
     </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-10">
+      <div className="flex gap-2">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="h-8 w-20 animate-pulse rounded-full bg-surface" />
+        ))}
+      </div>
+      {[1, 2].map((section) => (
+        <div key={section} className="space-y-4">
+          <div className="h-7 w-48 animate-pulse rounded bg-surface" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-3">
+                <div className="aspect-video animate-pulse rounded-xl bg-surface" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-surface" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-surface" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function HomePage() {
+  const { user, loading: authLoading } = useAuth();
+  const [userHasCategories, setUserHasCategories] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setUserHasCategories(null);
+      return;
+    }
+    getUserCategories(user.uid).then((cats) => {
+      setUserHasCategories(cats.length > 0);
+    });
+  }, [user]);
+
+  if (authLoading) return <LoadingSkeleton />;
+
+  // Not signed in → global feed
+  if (!user) return <GlobalFeed />;
+
+  // Signed in, checking categories...
+  if (userHasCategories === null) return <LoadingSkeleton />;
+
+  // Signed in, has categories → personalized feed
+  if (userHasCategories) return <PersonalizedFeed userId={user.uid} />;
+
+  // Signed in, 0 categories → global feed + banner
+  return (
+    <>
+      <NoCategoriesBanner />
+      <GlobalFeed />
+    </>
   );
 }
