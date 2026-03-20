@@ -1,6 +1,6 @@
 import axios from "axios";
 import { FieldValue } from "firebase-admin/firestore";
-import { db, upsertVideo, getActiveTopics, getAllUserTopics, createUserVideoRef } from "../utils/firestore";
+import { db, upsertVideo, getActiveTopics, getAllUserTopics, createUserVideoRef, getUserTopics } from "../utils/firestore";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
@@ -326,4 +326,81 @@ export async function fetchYouTubeForAllUsers(): Promise<{
   }
 
   return { fetched: totalFetched, fanOuts: totalFanOuts, errors };
+}
+
+// --- On-demand fetch for a single user ---
+
+export async function fetchYouTubeForSingleUser(userId: string): Promise<{
+  videosAdded: number;
+  errors: string[];
+}> {
+  const apiKey = getApiKey();
+  const topics = await getUserTopics(userId);
+
+  if (topics.length === 0) {
+    return { videosAdded: 0, errors: [] };
+  }
+
+  let videosAdded = 0;
+  const errors: string[] = [];
+
+  for (const topic of topics) {
+    const languages = topic.languages?.length ? topic.languages : ["en"];
+
+    for (const query of topic.searchQueries) {
+      try {
+        const allVideoIds = new Set<string>();
+        for (const lang of languages) {
+          const ids = await searchVideos(query, apiKey, undefined, 10, lang);
+          ids.forEach((id) => allVideoIds.add(id));
+        }
+
+        const videoIds = Array.from(allVideoIds);
+        const videos = await getVideoDetails(videoIds, apiKey);
+
+        for (const video of videos) {
+          const viewCount = parseInt(video.statistics.viewCount || "0");
+          if (viewCount < 10000) continue;
+
+          const audioLang = video.snippet.defaultAudioLanguage?.toLowerCase();
+          if (audioLang && !languages.some((lang) => audioLang.startsWith(lang))) {
+            continue;
+          }
+
+          const thumbnail =
+            video.snippet.thumbnails.high?.url ||
+            video.snippet.thumbnails.medium?.url ||
+            video.snippet.thumbnails.default?.url ||
+            "";
+
+          const videoIsShort = isShort(video.contentDetails.duration);
+          const format = videoIsShort ? "short" : "clip";
+          const globalVideoId = `youtube_${video.id}`;
+
+          await upsertVideo("youtube", video.id, {
+            platform: "youtube",
+            platformVideoId: video.id,
+            embedUrl: `https://www.youtube.com/embed/${video.id}`,
+            title: video.snippet.title,
+            description: video.snippet.description.slice(0, 500),
+            thumbnailUrl: thumbnail,
+            category: topic.defaultCategory,
+            format,
+            tags: [topic.name.toLowerCase(), ...(video.snippet.tags || []).slice(0, 5).map((t) => t.toLowerCase())],
+            viewCount,
+            fetchedAt: FieldValue.serverTimestamp(),
+          });
+
+          await createUserVideoRef(userId, globalVideoId, topic.id, topic.defaultCategory, format, 0);
+          videosAdded++;
+        }
+      } catch (err) {
+        const msg = `Fetch error for "${query}": ${err}`;
+        errors.push(msg);
+        console.error(msg);
+      }
+    }
+  }
+
+  return { videosAdded, errors };
 }

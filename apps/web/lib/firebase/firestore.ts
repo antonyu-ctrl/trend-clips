@@ -15,7 +15,8 @@ import {
   type QueryDocumentSnapshot,
   type DocumentData,
 } from "firebase/firestore";
-import { getClientDb } from "./client";
+import { httpsCallable } from "firebase/functions";
+import { getClientDb, getClientFunctions } from "./client";
 import type {
   Video,
   VideoFormat,
@@ -611,6 +612,16 @@ export async function promoteToAdmin(userId: string): Promise<void> {
       maxTopics: 999,
     });
   }
+}
+
+// --- On-demand video fetch ---
+export async function triggerUserFetch(): Promise<{ videosAdded: number }> {
+  const fn = httpsCallable<void, { videosAdded: number }>(
+    getClientFunctions(),
+    "fetchTopicsForUser"
+  );
+  const result = await fn();
+  return result.data;
 }
 
 // --- Super Admin: Invite Code Management ---

@@ -9,6 +9,7 @@ import {
   updateUserTopic,
   deleteUserTopic,
   getUserTopicCount,
+  triggerUserFetch,
 } from "@/lib/firebase/firestore";
 import type { Category, Topic } from "@/lib/types";
 
@@ -39,6 +40,7 @@ export default function DashboardTopicsPage() {
   const [formLanguages, setFormLanguages] = useState<string[]>(["en"]);
   const [saving, setSaving] = useState(false);
   const [limitMessage, setLimitMessage] = useState("");
+  const [fetchStatus, setFetchStatus] = useState<string | null>(null);
 
   async function loadData() {
     if (!user) return;
@@ -123,6 +125,22 @@ export default function DashboardTopicsPage() {
       }
       await loadData();
       resetForm();
+
+      // Trigger on-demand fetch for this user's topics
+      setFetchStatus("Fetching videos for your topics...");
+      try {
+        const result = await triggerUserFetch();
+        setFetchStatus(
+          result.videosAdded > 0
+            ? `${result.videosAdded} videos found! Check your feed.`
+            : "No new videos found. Try different search queries."
+        );
+        setTimeout(() => setFetchStatus(null), 5000);
+      } catch (fetchErr) {
+        console.error("Fetch failed:", fetchErr);
+        setFetchStatus("Video fetch failed. Videos will appear on the next scheduled cycle.");
+        setTimeout(() => setFetchStatus(null), 5000);
+      }
     } catch (err) {
       console.error("Failed to save topic:", err);
     }
@@ -175,6 +193,15 @@ export default function DashboardTopicsPage() {
       {limitMessage && (
         <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-400">
           {limitMessage}
+        </div>
+      )}
+
+      {fetchStatus && (
+        <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 p-4 text-sm text-accent">
+          {fetchStatus.includes("Fetching") && (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          )}
+          {fetchStatus}
         </div>
       )}
 

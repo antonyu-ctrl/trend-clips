@@ -1,11 +1,13 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFunctions as getFirebaseFunctions, type Functions } from "firebase/functions";
 import { firebaseConfig } from "./config";
 
 let _app: FirebaseApp | null = null;
 let _auth: Auth | null = null;
 let _db: Firestore | null = null;
+let _functions: Functions | null = null;
 
 function getFirebaseApp(): FirebaseApp {
   if (!_app) {
@@ -26,4 +28,11 @@ export function getClientDb(): Firestore {
     _db = getFirestore(getFirebaseApp());
   }
   return _db;
+}
+
+export function getClientFunctions(): Functions {
+  if (!_functions) {
+    _functions = getFirebaseFunctions(getFirebaseApp());
+  }
+  return _functions;
 }

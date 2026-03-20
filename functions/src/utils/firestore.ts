@@ -70,6 +70,20 @@ export async function getAllUserTopics(): Promise<UserTopicDoc[]> {
     });
 }
 
+// Get a single user's active topics
+export async function getUserTopics(userId: string): Promise<UserTopicDoc[]> {
+  const snap = await db
+    .collection(`users/${userId}/topics`)
+    .where("isActive", "==", true)
+    .get();
+
+  return snap.docs.map((d) => ({
+    id: d.id,
+    userId,
+    ...(d.data() as TopicDoc),
+  }));
+}
+
 // Create a userVideo reference (fan-out from global video to user's feed)
 export async function createUserVideoRef(
   userId: string,

@@ -1,6 +1,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
-import { fetchYouTubeForAllTopics, fetchYouTubeForAllUsers } from "./fetchers/youtube";
+import { fetchYouTubeForAllTopics, fetchYouTubeForAllUsers, fetchYouTubeForSingleUser } from "./fetchers/youtube";
 import { rescoreAllVideos, syncUserVideoScores } from "./pipeline/score";
 import { cleanupStaleVideos } from "./pipeline/cleanup";
 
@@ -56,5 +57,26 @@ export const cleanupVideos = onSchedule(
   async () => {
     const result = await cleanupStaleVideos();
     console.log(`Cleanup: checked ${result.checked}, removed ${result.removed}`);
+  }
+);
+
+// --- On-demand fetch for a single user (callable) ---
+
+export const fetchTopicsForUser = onCall(
+  {
+    memory: "512MiB",
+    timeoutSeconds: 120,
+    secrets: [youtubeApiKey],
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Must be signed in");
+    }
+
+    const userId = request.auth.uid;
+    const result = await fetchYouTubeForSingleUser(userId);
+    console.log(`On-demand fetch for ${userId}: ${result.videosAdded} videos, ${result.errors.length} errors`);
+
+    return { videosAdded: result.videosAdded };
   }
 );
