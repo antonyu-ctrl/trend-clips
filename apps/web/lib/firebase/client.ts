@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { getAuth, browserLocalPersistence, setPersistence, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getFunctions as getFirebaseFunctions, type Functions } from "firebase/functions";
 import { firebaseConfig } from "./config";
@@ -19,6 +19,8 @@ function getFirebaseApp(): FirebaseApp {
 export function getClientAuth(): Auth {
   if (!_auth) {
     _auth = getAuth(getFirebaseApp());
+    // Use local persistence to avoid third-party cookie issues in Chrome
+    setPersistence(_auth, browserLocalPersistence).catch(() => {});
   }
   return _auth;
 }
