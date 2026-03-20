@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import { redeemInviteCode } from "@/lib/firebase/firestore";
 
 export default function SettingsPage() {
   const { user, userProfile } = useAuth();
+  const { t } = useT();
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [redeeming, setRedeeming] = useState(false);
@@ -16,10 +18,10 @@ export default function SettingsPage() {
     setMessage("");
     const success = await redeemInviteCode(code.trim().toUpperCase(), user.uid);
     if (success) {
-      setMessage("Invite code redeemed! Your account has been upgraded. Please refresh the page.");
+      setMessage(t("settings.redeemSuccess"));
       setCode("");
     } else {
-      setMessage("Invalid or already used invite code.");
+      setMessage(t("settings.redeemFailed"));
     }
     setRedeeming(false);
   };
@@ -27,21 +29,21 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <div className="rounded-xl border border-border bg-surface p-6">
-        <h2 className="mb-4 text-lg font-semibold text-text-primary">Account</h2>
+        <h2 className="mb-4 text-lg font-semibold text-text-primary">{t("settings.account")}</h2>
         <div className="space-y-2 text-sm text-text-secondary">
-          <p><span className="font-medium text-text-primary">Name:</span> {userProfile?.displayName}</p>
-          <p><span className="font-medium text-text-primary">Email:</span> {userProfile?.email}</p>
-          <p><span className="font-medium text-text-primary">Tier:</span> <span className="capitalize">{userProfile?.tier === "admin" ? "Super Admin" : userProfile?.tier || "free"}</span></p>
-          <p><span className="font-medium text-text-primary">Categories:</span> {userProfile?.tier === "admin" ? "Unlimited" : `${userProfile?.maxCategories || 3} max`}</p>
-          <p><span className="font-medium text-text-primary">Topics per category:</span> {userProfile?.tier === "admin" ? "Unlimited" : `${userProfile?.maxTopics || 3} max`}</p>
+          <p><span className="font-medium text-text-primary">{t("settings.name")}:</span> {userProfile?.displayName}</p>
+          <p><span className="font-medium text-text-primary">{t("settings.email")}:</span> {userProfile?.email}</p>
+          <p><span className="font-medium text-text-primary">{t("settings.tier")}:</span> <span className="capitalize">{userProfile?.tier === "admin" ? t("settings.superAdmin") : userProfile?.tier || "free"}</span></p>
+          <p><span className="font-medium text-text-primary">{t("settings.categoriesLabel")}:</span> {userProfile?.tier === "admin" ? t("settings.unlimited") : `${userProfile?.maxCategories || 3} max`}</p>
+          <p><span className="font-medium text-text-primary">{t("settings.topicsLabel")}:</span> {userProfile?.tier === "admin" ? t("settings.unlimited") : `${userProfile?.maxTopics || 3} max`}</p>
         </div>
       </div>
 
       {userProfile?.tier === "free" && (
         <div className="rounded-xl border border-border bg-surface p-6">
-          <h2 className="mb-4 text-lg font-semibold text-text-primary">Redeem Invite Code</h2>
+          <h2 className="mb-4 text-lg font-semibold text-text-primary">{t("settings.redeemTitle")}</h2>
           <p className="mb-4 text-sm text-text-secondary">
-            Enter an invite code to upgrade to Pro (5 categories, 10 topics per category).
+            {t("settings.redeemDesc")}
           </p>
           <div className="flex gap-3">
             <input
@@ -57,7 +59,7 @@ export default function SettingsPage() {
               disabled={redeeming || !code.trim()}
               className="rounded-lg bg-accent px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
             >
-              {redeeming ? "Redeeming..." : "Redeem"}
+              {redeeming ? t("settings.redeeming") : t("settings.redeem")}
             </button>
           </div>
           {message && <p className="mt-3 text-sm">{message}</p>}

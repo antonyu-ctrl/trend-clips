@@ -1,4 +1,7 @@
+"use client";
+
 import type { Video, VideoFormat } from "@/lib/types";
+import { useT } from "@/lib/i18n/I18nContext";
 import { VideoCard } from "./VideoCard";
 
 interface VideoGridProps {
@@ -7,12 +10,14 @@ interface VideoGridProps {
 }
 
 export function VideoGrid({ videos, format }: VideoGridProps) {
+  const { t } = useT();
+
   if (videos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-lg text-text-secondary">No videos found</p>
+        <p className="text-lg text-text-secondary">{t("common.noVideosFound")}</p>
         <p className="mt-1 text-sm text-text-muted">
-          Check back later for new trending content.
+          {t("common.checkBackLater")}
         </p>
       </div>
     );

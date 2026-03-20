@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import {
   getUserTopics,
   getUserCategories,
@@ -13,19 +14,23 @@ import {
 } from "@/lib/firebase/firestore";
 import type { Category, Topic } from "@/lib/types";
 
-const LANGUAGE_OPTIONS = [
-  { code: "en", label: "English" },
-  { code: "ko", label: "Korean" },
-  { code: "ja", label: "Japanese" },
-  { code: "es", label: "Spanish" },
-  { code: "fr", label: "French" },
-  { code: "de", label: "German" },
-  { code: "pt", label: "Portuguese" },
-  { code: "zh", label: "Chinese" },
-];
+function getLanguageOptions(t: (key: string) => string) {
+  return [
+    { code: "en", label: t("lang.en") },
+    { code: "ko", label: t("lang.ko") },
+    { code: "ja", label: t("lang.ja") },
+    { code: "es", label: t("lang.es") },
+    { code: "fr", label: t("lang.fr") },
+    { code: "de", label: t("lang.de") },
+    { code: "pt", label: t("lang.pt") },
+    { code: "zh", label: t("lang.zh") },
+  ];
+}
 
 export default function DashboardTopicsPage() {
   const { user, userProfile } = useAuth();
+  const { t } = useT();
+  const LANGUAGE_OPTIONS = getLanguageOptions(t);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,12 +93,12 @@ export default function DashboardTopicsPage() {
     const maxTopics = userProfile.maxTopics || 5;
     if (count >= maxTopics) {
       setLimitMessage(
-        `You've reached the maximum of ${userProfile.maxTopics} topics for your ${userProfile.tier} tier. Enter an invite code in Settings to unlock more.`
+        t("topics.reachedMax", { max: userProfile.maxTopics, tier: userProfile.tier })
       );
       return;
     }
     if (categories.length === 0) {
-      setLimitMessage("Please create at least one category before adding topics.");
+      setLimitMessage(t("topics.needCategory"));
       return;
     }
     resetForm();
@@ -127,18 +132,18 @@ export default function DashboardTopicsPage() {
       resetForm();
 
       // Trigger on-demand fetch for this user's topics
-      setFetchStatus("Fetching videos for your topics...");
+      setFetchStatus(t("topics.fetchingVideos"));
       try {
         const result = await triggerUserFetch();
         setFetchStatus(
           result.videosAdded > 0
-            ? `${result.videosAdded} videos found! Check your feed.`
-            : "No new videos found. Try different search queries."
+            ? t("topics.videosFound", { count: result.videosAdded })
+            : t("topics.noNewVideos")
         );
         setTimeout(() => setFetchStatus(null), 5000);
       } catch (fetchErr) {
         console.error("Fetch failed:", fetchErr);
-        setFetchStatus("Video fetch failed. Videos will appear on the next scheduled cycle.");
+        setFetchStatus(t("topics.fetchFailed"));
         setTimeout(() => setFetchStatus(null), 5000);
       }
     } catch (err) {
@@ -149,7 +154,7 @@ export default function DashboardTopicsPage() {
 
   async function handleDelete(topicId: string) {
     if (!user) return;
-    if (!confirm("Delete this topic? Existing fetched videos will remain.")) return;
+    if (!confirm(t("topics.confirmDelete"))) return;
     await deleteUserTopic(user.uid, topicId);
     await loadData();
   }
@@ -174,11 +179,11 @@ export default function DashboardTopicsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-text-primary">My Topics</h2>
+          <h2 className="text-lg font-semibold text-text-primary">{t("topics.title")}</h2>
           <p className="text-sm text-text-secondary">
-            Topics define what search queries are used to fetch YouTube videos.
+            {t("topics.description")}
             {userProfile?.tier === "free" && (
-              <> ({topics.length}/{userProfile.maxTopics} used)</>
+              <> ({topics.length}/{userProfile.maxTopics} {t("topics.used")})</>
             )}
           </p>
         </div>
@@ -186,7 +191,7 @@ export default function DashboardTopicsPage() {
           onClick={startNew}
           className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 transition-colors sm:w-auto"
         >
-          + Add Topic
+          {t("topics.addTopic")}
         </button>
       </div>
 
@@ -198,7 +203,7 @@ export default function DashboardTopicsPage() {
 
       {fetchStatus && (
         <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 p-4 text-sm text-accent">
-          {fetchStatus.includes("Fetching") && (
+          {fetchStatus === t("topics.fetchingVideos") && (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
           )}
           {fetchStatus}
@@ -209,11 +214,11 @@ export default function DashboardTopicsPage() {
       {showForm && (
         <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
           <h3 className="font-semibold text-text-primary">
-            {editing ? "Edit Topic" : "New Topic"}
+            {editing ? t("topics.editTopic") : t("topics.newTopic")}
           </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm text-text-secondary">Topic Name</label>
+              <label className="mb-1 block text-sm text-text-secondary">{t("topics.topicName")}</label>
               <input
                 type="text"
                 value={formName}
@@ -223,7 +228,7 @@ export default function DashboardTopicsPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm text-text-secondary">Default Category</label>
+              <label className="mb-1 block text-sm text-text-secondary">{t("topics.defaultCategory")}</label>
               <select
                 value={formCategory}
                 onChange={(e) => setFormCategory(e.target.value)}
@@ -238,7 +243,7 @@ export default function DashboardTopicsPage() {
             </div>
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm text-text-secondary">
-                Search Queries (one per line)
+                {t("topics.searchQueries")}
               </label>
               <textarea
                 value={formQueries}
@@ -250,7 +255,7 @@ export default function DashboardTopicsPage() {
             </div>
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm text-text-secondary">
-                Languages (videos will be filtered to these languages)
+                {t("topics.languages")}
               </label>
               <div className="flex flex-wrap gap-2">
                 {LANGUAGE_OPTIONS.map((lang) => (
@@ -269,7 +274,7 @@ export default function DashboardTopicsPage() {
                 ))}
               </div>
               {formLanguages.length === 0 && (
-                <p className="mt-1 text-xs text-red-400">Select at least one language</p>
+                <p className="mt-1 text-xs text-red-400">{t("topics.selectLanguage")}</p>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -281,7 +286,7 @@ export default function DashboardTopicsPage() {
                 className="rounded border-border"
               />
               <label htmlFor="active" className="text-sm text-text-secondary">
-                Active (fetcher will use this topic)
+                {t("topics.active")}
               </label>
             </div>
           </div>
@@ -291,13 +296,13 @@ export default function DashboardTopicsPage() {
               disabled={saving || !formName || !formQueries}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 transition-colors"
             >
-              {saving ? "Saving..." : editing ? "Update" : "Create"}
+              {saving ? t("topics.saving") : editing ? t("topics.update") : t("topics.create")}
             </button>
             <button
               onClick={resetForm}
               className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
-              Cancel
+              {t("topics.cancel")}
             </button>
           </div>
         </div>
@@ -320,7 +325,7 @@ export default function DashboardTopicsPage() {
                       : "bg-red-500/10 text-red-400"
                   }`}
                 >
-                  {topic.isActive ? "Active" : "Paused"}
+                  {topic.isActive ? t("topics.activeStatus") : t("topics.pausedStatus")}
                 </span>
               </div>
               <div className="mt-1 text-sm text-text-muted">
@@ -341,26 +346,26 @@ export default function DashboardTopicsPage() {
                   onClick={() => handleToggleActive(topic)}
                   className="rounded-md px-3 py-1 text-sm text-text-secondary hover:bg-surface-hover transition-colors"
                 >
-                  {topic.isActive ? "Pause" : "Activate"}
+                  {topic.isActive ? t("topics.pause") : t("topics.activate")}
                 </button>
                 <button
                   onClick={() => startEdit(topic)}
                   className="rounded-md px-3 py-1 text-sm text-accent hover:bg-accent/10 transition-colors"
                 >
-                  Edit
+                  {t("topics.edit")}
                 </button>
                 <button
                   onClick={() => handleDelete(topic.id)}
                   className="rounded-md px-3 py-1 text-sm text-red-400 hover:bg-red-400/10 transition-colors"
                 >
-                  Delete
+                  {t("topics.delete")}
                 </button>
               </div>
             </div>
           </div>
         ))}
         {topics.length === 0 && (
-          <p className="text-text-muted">No topics yet. Create one to start fetching videos.</p>
+          <p className="text-text-muted">{t("topics.empty")}</p>
         )}
       </div>
     </div>

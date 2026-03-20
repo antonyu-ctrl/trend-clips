@@ -1,20 +1,22 @@
 "use client";
 
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navItems = [
-  { label: "Overview", href: "/dashboard" },
-  { label: "My Categories", href: "/dashboard/categories" },
-  { label: "My Topics", href: "/dashboard/topics" },
-  { label: "My Videos", href: "/dashboard/videos" },
-  { label: "Settings", href: "/dashboard/settings" },
-];
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, userProfile } = useAuth();
+  const { t } = useT();
   const pathname = usePathname();
+
+  const navItems = [
+    { label: t("dashboard.overview"), href: "/dashboard" },
+    { label: t("dashboard.myCategories"), href: "/dashboard/categories" },
+    { label: t("dashboard.myTopics"), href: "/dashboard/topics" },
+    { label: t("dashboard.myVideos"), href: "/dashboard/videos" },
+    { label: t("dashboard.settings"), href: "/dashboard/settings" },
+  ];
 
   if (loading) {
     return (
@@ -27,8 +29,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-bold text-text-primary">Sign in Required</h1>
-        <p className="text-text-secondary">Please sign in to access your dashboard.</p>
+        <h1 className="text-2xl font-bold text-text-primary">{t("dashboard.signInRequired")}</h1>
+        <p className="text-text-secondary">{t("dashboard.signInRequiredDesc")}</p>
       </div>
     );
   }

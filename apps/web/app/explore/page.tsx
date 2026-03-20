@@ -10,27 +10,30 @@ import {
   getUserVideos,
 } from "@/lib/firebase/firestore";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import type { Video } from "@/lib/types";
 
 function EmptyState() {
+  const { t } = useT();
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="mb-4 text-5xl">🔍</div>
-      <h2 className="mb-2 text-xl font-semibold text-text-primary">Nothing to explore yet</h2>
+      <h2 className="mb-2 text-xl font-semibold text-text-primary">{t("explore.nothingYet")}</h2>
       <p className="mb-6 max-w-md text-text-secondary">
-        Add categories and topics in your dashboard to start discovering content.
+        {t("explore.addDesc")}
       </p>
       <Link
         href="/dashboard/categories"
         className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-accent/90"
       >
-        Add Categories →
+        {t("home.addCategories")}
       </Link>
     </div>
   );
 }
 
 export default function ExplorePage() {
+  const { t } = useT();
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [videos, setVideos] = useState<Video[]>([]);
@@ -102,9 +105,9 @@ export default function ExplorePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Explore</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{t("explore.title")}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Search videos by tags or browse trending content.
+          {t("explore.description")}
         </p>
       </div>
 
@@ -113,7 +116,7 @@ export default function ExplorePage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by tag (e.g. ai, travel, food)..."
+          placeholder={t("explore.searchPlaceholder")}
           className="flex-1 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
         />
         <button
@@ -121,7 +124,7 @@ export default function ExplorePage() {
           disabled={searching}
           className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
         >
-          Search
+          {t("explore.search")}
         </button>
         {query && (
           <button
@@ -129,7 +132,7 @@ export default function ExplorePage() {
             onClick={handleClear}
             className="rounded-lg bg-surface px-4 py-2 text-sm text-text-secondary hover:bg-surface-hover"
           >
-            Clear
+            {t("explore.clear")}
           </button>
         )}
       </form>

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n/I18nContext";
 import { getAllUsers } from "@/lib/firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 
 export default function UsersPage() {
+  const { t } = useT();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,16 +22,16 @@ export default function UsersPage() {
   return (
     <div>
       <h2 className="mb-6 text-lg font-semibold text-text-primary">
-        All Users ({users.length})
+        {t("adminUsers.title")} ({users.length})
       </h2>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="bg-surface">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">User</th>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Email</th>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Tier</th>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Invite Code</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">{t("adminUsers.user")}</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">{t("adminUsers.email")}</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">{t("adminUsers.tier")}</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">{t("adminUsers.inviteCode")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -50,7 +52,7 @@ export default function UsersPage() {
                     u.tier === "pro" ? "bg-green-500/10 text-green-500" :
                     "bg-gray-500/10 text-gray-500"
                   }`}>
-                    {u.tier === "admin" ? "Super Admin" : u.tier === "pro" ? "Pro" : "Free"}
+                    {u.tier === "admin" ? t("adminUsers.superAdmin") : u.tier === "pro" ? t("adminUsers.pro") : t("adminUsers.free")}
                   </span>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-text-secondary">{u.inviteCode || "—"}</td>

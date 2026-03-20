@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "@/lib/i18n/I18nContext";
 import type { Category } from "@/lib/types";
 
 interface CategoryNavProps {
@@ -13,6 +14,7 @@ interface CategoryNavProps {
 
 export function CategoryNav({ categories, activeSlug, onSelect }: CategoryNavProps) {
   const pathname = usePathname();
+  const { t } = useT();
   const isControlled = onSelect !== undefined;
 
   const pillClass = (active: boolean) =>
@@ -29,7 +31,7 @@ export function CategoryNav({ categories, activeSlug, onSelect }: CategoryNavPro
           onClick={() => onSelect("")}
           className={pillClass(activeSlug === null || activeSlug === "")}
         >
-          All
+          {t("common.all")}
         </button>
         {categories.map((cat) => (
           <button
@@ -50,7 +52,7 @@ export function CategoryNav({ categories, activeSlug, onSelect }: CategoryNavPro
         href="/"
         className={pillClass(pathname === "/")}
       >
-        All
+        {t("common.all")}
       </Link>
       {categories.map((cat) => {
         const isActive = pathname === `/category/${cat.slug}`;

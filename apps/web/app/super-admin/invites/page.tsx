@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import { createInviteCode, getInviteCodes } from "@/lib/firebase/firestore";
 import type { InviteCode } from "@/lib/types";
 
 export default function InviteCodesPage() {
   const { user } = useAuth();
+  const { t } = useT();
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -32,22 +34,22 @@ export default function InviteCodesPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-text-primary">Invite Codes</h2>
+        <h2 className="text-lg font-semibold text-text-primary">{t("adminInvites.title")}</h2>
         <button
           onClick={handleCreate}
           disabled={creating}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50"
         >
-          {creating ? "Creating..." : "Generate Code"}
+          {creating ? t("adminInvites.creating") : t("adminInvites.generateCode")}
         </button>
       </div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="bg-surface">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Code</th>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Used By</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">{t("adminInvites.code")}</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">{t("adminInvites.status")}</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">{t("adminInvites.usedBy")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -58,7 +60,7 @@ export default function InviteCodesPage() {
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                     c.isUsed ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"
                   }`}>
-                    {c.isUsed ? "Used" : "Available"}
+                    {c.isUsed ? t("adminInvites.used") : t("adminInvites.available")}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-text-secondary">{c.usedBy || "—"}</td>
@@ -67,7 +69,7 @@ export default function InviteCodesPage() {
             {codes.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-4 py-8 text-center text-text-secondary">
-                  No invite codes yet. Click &quot;Generate Code&quot; to create one.
+                  {t("adminInvites.empty")}
                 </td>
               </tr>
             )}

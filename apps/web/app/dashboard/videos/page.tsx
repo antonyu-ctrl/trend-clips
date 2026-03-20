@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import {
   getUserVideos,
   getUserVideosByCategory,
@@ -18,6 +19,7 @@ type FormatFilter = "all" | "clip" | "short";
 
 export default function DashboardVideosPage() {
   const { user } = useAuth();
+  const { t } = useT();
   const [videos, setVideos] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -99,9 +101,9 @@ export default function DashboardVideosPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-text-primary">My Videos</h2>
+        <h2 className="text-lg font-semibold text-text-primary">{t("videos.title")}</h2>
         <p className="text-sm text-text-secondary">
-          Your personalized video feed based on your topics and categories.
+          {t("videos.description")}
         </p>
       </div>
 
@@ -117,7 +119,7 @@ export default function DashboardVideosPage() {
                 : "bg-surface text-text-secondary hover:bg-surface-hover"
             }`}
           >
-            All
+            {t("common.all")}
           </button>
           {categories.map((cat) => (
             <button
@@ -149,7 +151,7 @@ export default function DashboardVideosPage() {
                   : "bg-surface text-text-secondary hover:bg-surface-hover"
               }`}
             >
-              {fmt === "all" ? "All Formats" : fmt === "clip" ? "Clips" : "Shorts"}
+              {fmt === "all" ? t("videos.allFormats") : fmt === "clip" ? t("videos.clips") : t("videos.shorts")}
             </button>
           ))}
         </div>
@@ -163,16 +165,15 @@ export default function DashboardVideosPage() {
       ) : videos.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border p-12 text-center">
           <div className="text-4xl">📺</div>
-          <h3 className="text-lg font-semibold text-text-primary">No videos yet</h3>
+          <h3 className="text-lg font-semibold text-text-primary">{t("videos.noVideosYet")}</h3>
           <p className="max-w-md text-sm text-text-secondary">
-            Videos will appear here after the next fetch cycle (every 6 hours).
-            Make sure you have active topics with search queries.
+            {t("videos.noVideosDesc")}
           </p>
           <Link
             href="/dashboard/topics"
             className="rounded-lg bg-accent px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
           >
-            Manage Topics →
+            {t("videos.manageTopics")}
           </Link>
         </div>
       ) : (
@@ -188,7 +189,7 @@ export default function DashboardVideosPage() {
                 disabled={loadingMore}
                 className="rounded-lg bg-surface px-8 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover disabled:opacity-50"
               >
-                {loadingMore ? "Loading..." : "Load more"}
+                {loadingMore ? t("common.loading") : t("common.loadMore")}
               </button>
             </div>
           )}

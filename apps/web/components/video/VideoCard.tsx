@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Video } from "@/lib/types";
+import { useT } from "@/lib/i18n/I18nContext";
 import {
   getFormatColor,
   getFormatLabel,
@@ -15,6 +16,7 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, compact }: VideoCardProps) {
+  const { t } = useT();
   const formatColor = getFormatColor(video.format);
   const formatLabel = getFormatLabel(video.format);
 
@@ -46,7 +48,7 @@ export function VideoCard({ video, compact }: VideoCardProps) {
           </span>
           {/* View count */}
           <span className={`absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-white ${compact ? "text-[10px] sm:text-xs" : "text-xs"}`}>
-            {formatViewCount(video.viewCount)} views
+            {formatViewCount(video.viewCount)} {t("common.views")}
           </span>
         </div>
 

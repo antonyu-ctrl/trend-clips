@@ -1,20 +1,22 @@
 "use client";
 
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navItems = [
-  { label: "Global Categories", href: "/super-admin" },
-  { label: "Global Topics", href: "/super-admin/topics" },
-  { label: "Invite Codes", href: "/super-admin/invites" },
-  { label: "Users", href: "/super-admin/users" },
-  { label: "Videos", href: "/super-admin/videos" },
-];
-
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
+  const { t } = useT();
   const pathname = usePathname();
+
+  const navItems = [
+    { label: t("admin.globalCategories"), href: "/super-admin" },
+    { label: t("admin.globalTopics"), href: "/super-admin/topics" },
+    { label: t("admin.inviteCodes"), href: "/super-admin/invites" },
+    { label: t("admin.users"), href: "/super-admin/users" },
+    { label: t("admin.videos"), href: "/super-admin/videos" },
+  ];
 
   if (loading) {
     return (
@@ -27,8 +29,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   if (!user || !isAdmin) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-bold text-text-primary">Access Denied</h1>
-        <p className="text-text-secondary">This area is restricted to super administrators.</p>
+        <h1 className="text-2xl font-bold text-text-primary">{t("admin.accessDenied")}</h1>
+        <p className="text-text-secondary">{t("admin.accessDeniedDesc")}</p>
       </div>
     );
   }

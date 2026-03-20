@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 
 export function Header() {
   const { user, loading, isAdmin, userProfile, signInWithGoogle, signOut } = useAuth();
+  const { t, locale, setLocale } = useT();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -21,25 +23,25 @@ export function Header() {
               href="/"
               className="text-sm text-text-secondary transition-colors hover:text-text-primary"
             >
-              Home
+              {t("nav.home")}
             </Link>
             <Link
               href="/clips"
               className="text-sm text-text-secondary transition-colors hover:text-text-primary"
             >
-              Clips
+              {t("nav.clips")}
             </Link>
             <Link
               href="/shorts"
               className="text-sm text-text-secondary transition-colors hover:text-text-primary"
             >
-              Shorts
+              {t("nav.shorts")}
             </Link>
             <Link
               href="/explore"
               className="text-sm text-text-secondary transition-colors hover:text-text-primary"
             >
-              Explore
+              {t("nav.explore")}
             </Link>
           </nav>
         </div>
@@ -55,20 +57,20 @@ export function Header() {
                   href="/favorites"
                   className="text-sm text-text-secondary transition-colors hover:text-text-primary"
                 >
-                  Favorites
+                  {t("nav.favorites")}
                 </Link>
                 <Link
                   href="/dashboard"
                   className="rounded-md bg-accent/10 px-3 py-1 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
                 >
-                  Dashboard
+                  {t("nav.dashboard")}
                 </Link>
                 {isAdmin && (
                   <Link
                     href="/super-admin"
                     className="rounded-md bg-red-500/10 px-3 py-1 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20"
                   >
-                    Super Admin
+                    {t("nav.superAdmin")}
                   </Link>
                 )}
                 {user.photoURL ? (
@@ -84,19 +86,33 @@ export function Header() {
                   </div>
                 )}
                 <button
+                  onClick={() => setLocale(locale === "en" ? "ko" : "en")}
+                  className="rounded-lg bg-surface px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-hover"
+                >
+                  {locale === "en" ? "KO" : "EN"}
+                </button>
+                <button
                   onClick={signOut}
                   className="rounded-lg bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
                 >
-                  Sign out
+                  {t("nav.signOut")}
                 </button>
               </>
             ) : (
-              <button
-                onClick={signInWithGoogle}
-                className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-              >
-                Sign in
-              </button>
+              <>
+                <button
+                  onClick={() => setLocale(locale === "en" ? "ko" : "en")}
+                  className="rounded-lg bg-surface px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-hover"
+                >
+                  {locale === "en" ? "KO" : "EN"}
+                </button>
+                <button
+                  onClick={signInWithGoogle}
+                  className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+                >
+                  {t("nav.signIn")}
+                </button>
+              </>
             )}
           </div>
 
@@ -106,7 +122,7 @@ export function Header() {
               onClick={signInWithGoogle}
               className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover md:hidden"
             >
-              Sign in
+              {t("nav.signIn")}
             </button>
           )}
           {user?.photoURL && (
@@ -140,10 +156,10 @@ export function Header() {
         <div className="border-t border-border bg-surface/95 backdrop-blur-md md:hidden">
           <nav className="mx-auto max-w-7xl space-y-1 px-4 py-3">
             {[
-              { href: "/", label: "Home" },
-              { href: "/clips", label: "Clips" },
-              { href: "/shorts", label: "Shorts" },
-              { href: "/explore", label: "Explore" },
+              { href: "/", label: t("nav.home") },
+              { href: "/clips", label: t("nav.clips") },
+              { href: "/shorts", label: t("nav.shorts") },
+              { href: "/explore", label: t("nav.explore") },
             ].map((item) => (
               <Link
                 key={item.href}
@@ -162,14 +178,14 @@ export function Header() {
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
                 >
-                  Favorites
+                  {t("nav.favorites")}
                 </Link>
                 <Link
                   href="/dashboard"
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-lg px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
                 >
-                  Dashboard
+                  {t("nav.dashboard")}
                 </Link>
                 {isAdmin && (
                   <Link
@@ -177,7 +193,7 @@ export function Header() {
                     onClick={() => setMenuOpen(false)}
                     className="block rounded-lg px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
                   >
-                    Super Admin
+                    {t("nav.superAdmin")}
                   </Link>
                 )}
                 <div className="my-2 border-t border-border" />
@@ -185,10 +201,17 @@ export function Header() {
                   onClick={() => { signOut(); setMenuOpen(false); }}
                   className="block w-full rounded-lg px-3 py-2 text-left text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
                 >
-                  Sign out
+                  {t("nav.signOut")}
                 </button>
               </>
             )}
+            <div className="my-2 border-t border-border" />
+            <button
+              onClick={() => setLocale(locale === "en" ? "ko" : "en")}
+              className="rounded-lg bg-surface px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-hover"
+            >
+              {locale === "en" ? "KO" : "EN"}
+            </button>
           </nav>
         </div>
       )}

@@ -13,28 +13,31 @@ import {
   getUserVideosByCategoryAndFormat,
 } from "@/lib/firebase/firestore";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import type { Video, Category } from "@/lib/types";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 
 function EmptyState() {
+  const { t } = useT();
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="mb-4 text-5xl">⚡</div>
-      <h2 className="mb-2 text-xl font-semibold text-text-primary">No shorts yet</h2>
+      <h2 className="mb-2 text-xl font-semibold text-text-primary">{t("shorts.noShortsYet")}</h2>
       <p className="mb-6 max-w-md text-text-secondary">
-        Add categories and topics in your dashboard to start seeing shorts.
+        {t("shorts.addDesc")}
       </p>
       <Link
         href="/dashboard/categories"
         className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-accent/90"
       >
-        Add Categories →
+        {t("home.addCategories")}
       </Link>
     </div>
   );
 }
 
 export default function ShortsPage() {
+  const { t } = useT();
   const { user } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -107,8 +110,8 @@ export default function ShortsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="mb-2 text-3xl font-bold text-text-primary">⚡ YouTube Shorts</h1>
-          <p className="text-text-secondary">Top trending YouTube Shorts by popularity</p>
+          <h1 className="mb-2 text-3xl font-bold text-text-primary">{"⚡ " + t("shorts.title")}</h1>
+          <p className="text-text-secondary">{t("shorts.description")}</p>
         </div>
         <EmptyState />
       </div>
@@ -148,7 +151,7 @@ export default function ShortsPage() {
                 disabled={loadingMore}
                 className="rounded-lg bg-surface px-6 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
               >
-                {loadingMore ? "Loading..." : "Load more"}
+                {loadingMore ? t("common.loading") : t("common.loadMore")}
               </button>
             </div>
           )}

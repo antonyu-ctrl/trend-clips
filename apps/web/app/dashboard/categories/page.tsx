@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import {
   getUserCategories,
   createUserCategory,
@@ -13,6 +14,7 @@ import type { Category } from "@/lib/types";
 
 export default function DashboardCategoriesPage() {
   const { user, userProfile } = useAuth();
+  const { t } = useT();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export default function DashboardCategoriesPage() {
     const count = await getUserCategoryCount(user.uid);
     if (count >= (userProfile.maxCategories || 3)) {
       setLimitMessage(
-        `You've reached the maximum of ${(userProfile.maxCategories || 3)} categories for your ${userProfile.tier} tier. Enter an invite code in Settings to unlock more.`
+        t("categories.reachedMax", { max: (userProfile.maxCategories || 3), tier: userProfile.tier })
       );
       return;
     }
@@ -100,7 +102,7 @@ export default function DashboardCategoriesPage() {
 
   async function handleDelete(catId: string) {
     if (!user) return;
-    if (!confirm("Delete this category? Videos in this category won't be removed.")) return;
+    if (!confirm(t("categories.confirmDelete"))) return;
     await deleteUserCategory(user.uid, catId);
     await loadCategories();
   }
@@ -119,10 +121,10 @@ export default function DashboardCategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-text-primary">My Categories</h2>
+          <h2 className="text-lg font-semibold text-text-primary">{t("categories.title")}</h2>
           {userProfile?.tier === "free" && (
             <p className="text-sm text-text-secondary">
-              {categories.length}/{(userProfile.maxCategories || 3)} categories used
+              {categories.length}/{(userProfile.maxCategories || 3)} {t("categories.used")}
             </p>
           )}
         </div>
@@ -130,7 +132,7 @@ export default function DashboardCategoriesPage() {
           onClick={startNew}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 transition-colors"
         >
-          + Add Category
+          {t("categories.addCategory")}
         </button>
       </div>
 
@@ -144,11 +146,11 @@ export default function DashboardCategoriesPage() {
       {showForm && (
         <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
           <h3 className="font-semibold text-text-primary">
-            {editing ? "Edit Category" : "New Category"}
+            {editing ? t("categories.editCategory") : t("categories.newCategory")}
           </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm text-text-secondary">Name</label>
+              <label className="mb-1 block text-sm text-text-secondary">{t("categories.name")}</label>
               <input
                 type="text"
                 value={formName}
@@ -161,7 +163,7 @@ export default function DashboardCategoriesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm text-text-secondary">Slug</label>
+              <label className="mb-1 block text-sm text-text-secondary">{t("categories.slug")}</label>
               <input
                 type="text"
                 value={formSlug}
@@ -171,7 +173,7 @@ export default function DashboardCategoriesPage() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm text-text-secondary">Description</label>
+              <label className="mb-1 block text-sm text-text-secondary">{t("categories.description")}</label>
               <input
                 type="text"
                 value={formDescription}
@@ -181,7 +183,7 @@ export default function DashboardCategoriesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm text-text-secondary">Order</label>
+              <label className="mb-1 block text-sm text-text-secondary">{t("categories.order")}</label>
               <input
                 type="number"
                 value={formOrder}
@@ -196,13 +198,13 @@ export default function DashboardCategoriesPage() {
               disabled={saving || !formName || !formSlug}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 transition-colors"
             >
-              {saving ? "Saving..." : editing ? "Update" : "Create"}
+              {saving ? t("categories.saving") : editing ? t("categories.update") : t("categories.create")}
             </button>
             <button
               onClick={resetForm}
               className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
-              Cancel
+              {t("categories.cancel")}
             </button>
           </div>
         </div>
@@ -227,19 +229,19 @@ export default function DashboardCategoriesPage() {
                 onClick={() => startEdit(cat)}
                 className="rounded-md px-3 py-1 text-sm text-accent hover:bg-accent/10 transition-colors"
               >
-                Edit
+                {t("categories.edit")}
               </button>
               <button
                 onClick={() => handleDelete(cat.id)}
                 className="rounded-md px-3 py-1 text-sm text-red-400 hover:bg-red-400/10 transition-colors"
               >
-                Delete
+                {t("categories.delete")}
               </button>
             </div>
           </div>
         ))}
         {categories.length === 0 && (
-          <p className="text-text-muted">No categories yet. Create one above.</p>
+          <p className="text-text-muted">{t("categories.empty")}</p>
         )}
       </div>
     </div>

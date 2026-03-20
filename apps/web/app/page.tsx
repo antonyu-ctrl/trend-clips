@@ -12,9 +12,11 @@ import {
   getUserVideosByCategoryAndFormat,
 } from "@/lib/firebase/firestore";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useT } from "@/lib/i18n/I18nContext";
 import type { Video, Category } from "@/lib/types";
 
 function PersonalizedFeed({ userId }: { userId: string }) {
+  const { t } = useT();
   const [clips, setClips] = useState<Video[]>([]);
   const [shorts, setShorts] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -62,7 +64,7 @@ function PersonalizedFeed({ userId }: { userId: string }) {
                 : "bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary"
             }`}
           >
-            All
+            {t("common.all")}
           </button>
           {categories.map((cat) => (
             <button
@@ -86,17 +88,16 @@ function PersonalizedFeed({ userId }: { userId: string }) {
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-surface p-12 text-center">
           <div className="text-4xl">📭</div>
           <h2 className="text-lg font-semibold text-text-primary">
-            No videos yet
+            {t("home.noVideosYet")}
           </h2>
           <p className="max-w-md text-sm text-text-secondary">
-            Videos will appear here after the next fetch cycle (every 6 hours).
-            Make sure you have active topics with search queries.
+            {t("home.noVideosDesc")}
           </p>
           <Link
             href="/dashboard/topics"
             className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
           >
-            Manage Topics →
+            {t("home.manageTopics")}
           </Link>
         </div>
       ) : (
@@ -105,13 +106,13 @@ function PersonalizedFeed({ userId }: { userId: string }) {
             <section>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-text-primary">
-                  🎬 Your Clips
+                  {"🎬 " + t("home.yourClips")}
                 </h2>
                 <Link
                   href="/clips"
                   className="text-sm font-medium text-accent hover:text-accent/80 transition-colors"
                 >
-                  View all →
+                  {t("common.viewAll")}
                 </Link>
               </div>
               <VideoGrid videos={clips} format="clip" />
@@ -122,13 +123,13 @@ function PersonalizedFeed({ userId }: { userId: string }) {
             <section>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-text-primary">
-                  ⚡ Your Shorts
+                  {"⚡ " + t("home.yourShorts")}
                 </h2>
                 <Link
                   href="/shorts"
                   className="text-sm font-medium text-accent hover:text-accent/80 transition-colors"
                 >
-                  View all →
+                  {t("common.viewAll")}
                 </Link>
               </div>
               <VideoGrid videos={shorts} format="short" />
@@ -141,47 +142,50 @@ function PersonalizedFeed({ userId }: { userId: string }) {
 }
 
 function NoCategoriesBanner() {
+  const { t } = useT();
   return (
     <div className="mb-8 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 px-6 py-4">
       <div>
         <h3 className="font-semibold text-text-primary">
-          Customize your feed
+          {t("home.customizeFeed")}
         </h3>
         <p className="text-sm text-text-secondary">
-          Create your own categories and topics to get a personalized video feed. The public clips below will be replaced by your own selections.
+          {t("home.customizeDesc")}
         </p>
       </div>
       <Link
         href="/dashboard/categories"
         className="whitespace-nowrap rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
       >
-        Get Started →
+        {t("home.getStarted")}
       </Link>
     </div>
   );
 }
 
 function EmptyFeedState() {
+  const { t } = useT();
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="mb-4 text-5xl">📂</div>
       <h2 className="mb-2 text-xl font-semibold text-text-primary">
-        No categories yet
+        {t("home.noCategoriesYet")}
       </h2>
       <p className="mb-6 max-w-md text-text-secondary">
-        Add categories and topics to start seeing your personalized video feed.
+        {t("home.addCategoriesDesc")}
       </p>
       <Link
         href="/dashboard/categories"
         className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-accent/90"
       >
-        Add Categories →
+        {t("home.addCategories")}
       </Link>
     </div>
   );
 }
 
 function GlobalFeed() {
+  const { t } = useT();
   const [clips, setClips] = useState<Video[]>([]);
   const [shorts, setShorts] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -211,38 +215,38 @@ function GlobalFeed() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-text-primary">
-            🎬 Top YouTube Clips
+            {"🎬 " + t("home.topClips")}
           </h2>
           <Link
             href="/clips"
             className="text-sm font-medium text-accent hover:text-accent/80 transition-colors"
           >
-            View all →
+            {t("common.viewAll")}
           </Link>
         </div>
         {clips.length > 0 ? (
           <VideoGrid videos={clips} format="clip" />
         ) : (
-          <p className="text-text-muted">No clips found yet.</p>
+          <p className="text-text-muted">{t("home.noClips")}</p>
         )}
       </section>
 
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-text-primary">
-            ⚡ Top YouTube Shorts
+            {"⚡ " + t("home.topShorts")}
           </h2>
           <Link
             href="/shorts"
             className="text-sm font-medium text-accent hover:text-accent/80 transition-colors"
           >
-            View all →
+            {t("common.viewAll")}
           </Link>
         </div>
         {shorts.length > 0 ? (
           <VideoGrid videos={shorts} format="short" />
         ) : (
-          <p className="text-text-muted">No shorts found yet.</p>
+          <p className="text-text-muted">{t("home.noShorts")}</p>
         )}
       </section>
     </div>
