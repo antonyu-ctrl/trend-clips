@@ -9,7 +9,8 @@ import {
 } from "react";
 import {
   onAuthStateChanged,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   type User,
@@ -43,6 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
+    // Handle redirect result on page load
+    getRedirectResult(getClientAuth()).catch(() => {});
+
     const unsubscribe = onAuthStateChanged(getClientAuth(), async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
@@ -75,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(getClientAuth(), provider);
+    await signInWithRedirect(getClientAuth(), provider);
   };
 
   const signOut = async () => {
