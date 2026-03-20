@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
 
 export function Header() {
-  const { user, loading, isAdmin, signInWithGoogle, signOut } = useAuth();
+  const { user, loading, isAdmin, userProfile, signInWithGoogle, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -63,12 +63,18 @@ export function Header() {
                 >
                   Submit
                 </Link>
+                <Link
+                  href="/dashboard"
+                  className="rounded-md bg-accent/10 px-3 py-1 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
+                >
+                  Dashboard
+                </Link>
                 {isAdmin && (
                   <Link
-                    href="/admin"
-                    className="rounded-md bg-accent/10 px-3 py-1 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
+                    href="/super-admin"
+                    className="rounded-md bg-red-500/10 px-3 py-1 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20"
                   >
-                    Admin
+                    Super Admin
                   </Link>
                 )}
                 {user.photoURL ? (
@@ -171,13 +177,20 @@ export function Header() {
                 >
                   Submit
                 </Link>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-lg px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
+                >
+                  Dashboard
+                </Link>
                 {isAdmin && (
                   <Link
-                    href="/admin"
+                    href="/super-admin"
                     onClick={() => setMenuOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
                   >
-                    Admin
+                    Super Admin
                   </Link>
                 )}
                 <div className="my-2 border-t border-border" />

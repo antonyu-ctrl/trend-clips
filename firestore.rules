@@ -37,6 +37,34 @@ service cloud.firestore {
       allow update: if isOwner(userId)
         && !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['createdAt']);
+
+      // User's own categories: owner read/write
+      match /categories/{catId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // User's own topics: owner read/write
+      match /topics/{topicId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // User's video refs: owner read, Cloud Functions write only
+      match /userVideos/{videoId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+    }
+
+    // Invite codes: anyone can read (to validate), only admin creates
+    match /inviteCodes/{code} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAuthenticated();
+    }
+
+    // Quota usage: Cloud Functions only
+    match /quotaUsage/{docId} {
+      allow read, write: if false;
     }
 
     // Favorites: owner CRUD

@@ -15,12 +15,14 @@ import {
   type User,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
-import { createOrUpdateUserProfile } from "@/lib/firebase/firestore";
+import { createOrUpdateUserProfile, getUserProfile } from "@/lib/firebase/firestore";
+import type { UserProfile } from "@/lib/types";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  userProfile: UserProfile | null;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -29,6 +31,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
   isAdmin: false,
+  userProfile: null,
   signInWithGoogle: async () => {},
   signOut: async () => {},
 });
@@ -37,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getClientAuth(), async (firebaseUser) => {
@@ -44,7 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
 
       if (firebaseUser) {
-        // Check admin claim from token
         const tokenResult = await firebaseUser.getIdTokenResult();
         setIsAdmin(tokenResult.claims.admin === true);
 
@@ -53,8 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: firebaseUser.email || "",
           avatarUrl: firebaseUser.photoURL || "",
         });
+
+        const profile = await getUserProfile(firebaseUser.uid);
+        setUserProfile(profile);
       } else {
         setIsAdmin(false);
+        setUserProfile(null);
       }
     });
     return unsubscribe;
@@ -70,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, userProfile, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

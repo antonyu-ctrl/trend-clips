@@ -27,6 +27,10 @@ import type {
   Favorite,
   Suggestion,
   Platform,
+  UserProfile,
+  UserVideo,
+  InviteCode,
+  Topic,
 } from "@/lib/types";
 
 // --- Collection refs (lazy to avoid SSG initialization) ---
@@ -345,11 +349,15 @@ export async function createOrUpdateUserProfile(
   const ref = doc(usersRef(), userId);
   const snap = await getDoc(ref);
   if (snap.exists()) {
-    // Update profile without touching createdAt
     await setDoc(ref, { ...data }, { merge: true });
   } else {
-    // First time: create with createdAt
-    await setDoc(ref, { ...data, createdAt: serverTimestamp() });
+    await setDoc(ref, {
+      ...data,
+      createdAt: serverTimestamp(),
+      tier: "free",
+      maxCategories: 3,
+      maxTopics: 5,
+    });
   }
 }
 
@@ -456,4 +464,246 @@ export async function updateSuggestionStatus(
   status: "approved" | "rejected"
 ): Promise<void> {
   await updateDoc(doc(suggestionsRef(), sugId), { status });
+}
+
+// --- User Profile with tier ---
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const snap = await getDoc(doc(usersRef(), userId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as UserProfile;
+}
+
+// --- User-scoped Categories ---
+const userCategoriesRef = (userId: string) =>
+  collection(getClientDb(), "users", userId, "categories");
+
+export async function getUserCategories(userId: string): Promise<Category[]> {
+  const q = query(userCategoriesRef(userId), orderBy("order", "asc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => docToData<Category>(d));
+}
+
+export async function createUserCategory(
+  userId: string,
+  data: { name: string; slug: string; description: string; order: number }
+): Promise<string> {
+  const ref = doc(userCategoriesRef(userId));
+  await setDoc(ref, data);
+  return ref.id;
+}
+
+export async function updateUserCategory(
+  userId: string,
+  catId: string,
+  data: Partial<{ name: string; slug: string; description: string; order: number }>
+): Promise<void> {
+  await updateDoc(doc(userCategoriesRef(userId), catId), data);
+}
+
+export async function deleteUserCategory(userId: string, catId: string): Promise<void> {
+  await deleteDoc(doc(userCategoriesRef(userId), catId));
+}
+
+export async function getUserCategoryCount(userId: string): Promise<number> {
+  const snap = await getDocs(userCategoriesRef(userId));
+  return snap.size;
+}
+
+// --- User-scoped Topics ---
+const userTopicsRef = (userId: string) =>
+  collection(getClientDb(), "users", userId, "topics");
+
+export async function getUserTopics(userId: string): Promise<Topic[]> {
+  const snap = await getDocs(userTopicsRef(userId));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Topic));
+}
+
+export async function createUserTopic(
+  userId: string,
+  data: { name: string; searchQueries: string[]; defaultCategory: string; isActive: boolean; languages?: string[] }
+): Promise<string> {
+  const ref = doc(userTopicsRef(userId));
+  await setDoc(ref, data);
+  return ref.id;
+}
+
+export async function updateUserTopic(
+  userId: string,
+  topicId: string,
+  data: Partial<{ name: string; searchQueries: string[]; defaultCategory: string; isActive: boolean; languages?: string[] }>
+): Promise<void> {
+  await updateDoc(doc(userTopicsRef(userId), topicId), data);
+}
+
+export async function deleteUserTopic(userId: string, topicId: string): Promise<void> {
+  await deleteDoc(doc(userTopicsRef(userId), topicId));
+}
+
+export async function getUserTopicCount(userId: string): Promise<number> {
+  const snap = await getDocs(userTopicsRef(userId));
+  return snap.size;
+}
+
+// --- User Videos (personalized feed) ---
+const userVideosRef = (userId: string) =>
+  collection(getClientDb(), "users", userId, "userVideos");
+
+export async function getUserVideos(
+  userId: string,
+  pageSize: number = 20,
+  cursor?: QueryDocumentSnapshot
+): Promise<{ videos: Video[]; lastDoc: QueryDocumentSnapshot | null }> {
+  let q = query(userVideosRef(userId), orderBy("score", "desc"), limit(pageSize));
+  if (cursor) {
+    q = query(userVideosRef(userId), orderBy("score", "desc"), startAfter(cursor), limit(pageSize));
+  }
+  const snap = await getDocs(q);
+
+  // Batch fetch global video docs
+  const videos: Video[] = [];
+  for (const d of snap.docs) {
+    const uv = d.data() as UserVideo;
+    const videoDoc = await getDoc(doc(videosRef(), uv.videoId));
+    if (videoDoc.exists()) {
+      videos.push({ id: videoDoc.id, ...videoDoc.data() } as Video);
+    }
+  }
+
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+  return { videos, lastDoc };
+}
+
+export async function getUserVideosByCategory(
+  userId: string,
+  categorySlug: string,
+  pageSize: number = 20,
+  cursor?: QueryDocumentSnapshot
+): Promise<{ videos: Video[]; lastDoc: QueryDocumentSnapshot | null }> {
+  let q = query(
+    userVideosRef(userId),
+    where("category", "==", categorySlug),
+    orderBy("score", "desc"),
+    limit(pageSize)
+  );
+  if (cursor) {
+    q = query(
+      userVideosRef(userId),
+      where("category", "==", categorySlug),
+      orderBy("score", "desc"),
+      startAfter(cursor),
+      limit(pageSize)
+    );
+  }
+  const snap = await getDocs(q);
+
+  const videos: Video[] = [];
+  for (const d of snap.docs) {
+    const uv = d.data() as UserVideo;
+    const videoDoc = await getDoc(doc(videosRef(), uv.videoId));
+    if (videoDoc.exists()) {
+      videos.push({ id: videoDoc.id, ...videoDoc.data() } as Video);
+    }
+  }
+
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+  return { videos, lastDoc };
+}
+
+export async function getUserVideosByFormat(
+  userId: string,
+  format: VideoFormat,
+  pageSize: number = 20,
+  cursor?: QueryDocumentSnapshot
+): Promise<{ videos: Video[]; lastDoc: QueryDocumentSnapshot | null }> {
+  let q = query(
+    userVideosRef(userId),
+    where("format", "==", format),
+    orderBy("score", "desc"),
+    limit(pageSize)
+  );
+  if (cursor) {
+    q = query(
+      userVideosRef(userId),
+      where("format", "==", format),
+      orderBy("score", "desc"),
+      startAfter(cursor),
+      limit(pageSize)
+    );
+  }
+  const snap = await getDocs(q);
+
+  const videos: Video[] = [];
+  for (const d of snap.docs) {
+    const uv = d.data() as UserVideo;
+    const videoDoc = await getDoc(doc(videosRef(), uv.videoId));
+    if (videoDoc.exists()) {
+      videos.push({ id: videoDoc.id, ...videoDoc.data() } as Video);
+    }
+  }
+
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+  return { videos, lastDoc };
+}
+
+// --- Invite Codes ---
+const inviteCodesRef = () => collection(getClientDb(), "inviteCodes");
+
+export async function validateInviteCode(code: string): Promise<boolean> {
+  const snap = await getDoc(doc(inviteCodesRef(), code));
+  if (!snap.exists()) return false;
+  const data = snap.data() as InviteCode;
+  return !data.isUsed;
+}
+
+export async function redeemInviteCode(code: string, userId: string): Promise<boolean> {
+  const ref = doc(inviteCodesRef(), code);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return false;
+  const data = snap.data() as InviteCode;
+  if (data.isUsed) return false;
+
+  await updateDoc(ref, {
+    isUsed: true,
+    usedBy: userId,
+    usedAt: serverTimestamp(),
+  });
+
+  // Upgrade user tier
+  await updateDoc(doc(usersRef(), userId), {
+    tier: "invited",
+    maxCategories: 999,
+    maxTopics: 999,
+    inviteCode: code,
+  });
+
+  return true;
+}
+
+// --- Super Admin: Invite Code Management ---
+export async function createInviteCode(adminUserId: string): Promise<string> {
+  // Generate a random 8-char code
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  await setDoc(doc(inviteCodesRef(), code), {
+    createdBy: adminUserId,
+    createdAt: serverTimestamp(),
+    isUsed: false,
+  });
+
+  return code;
+}
+
+export async function getInviteCodes(): Promise<InviteCode[]> {
+  const snap = await getDocs(query(inviteCodesRef(), orderBy("createdAt", "desc")));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as InviteCode));
+}
+
+// --- Super Admin: User Management ---
+export async function getAllUsers(): Promise<UserProfile[]> {
+  const snap = await getDocs(query(usersRef(), orderBy("createdAt", "desc")));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as UserProfile));
 }

@@ -1,8 +1,8 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
-import { fetchYouTubeForAllTopics } from "./fetchers/youtube";
-import { rescoreAllVideos } from "./pipeline/score";
+import { fetchYouTubeForAllTopics, fetchYouTubeForAllUsers } from "./fetchers/youtube";
+import { rescoreAllVideos, syncUserVideoScores } from "./pipeline/score";
 import { cleanupStaleVideos } from "./pipeline/cleanup";
 import { computeScore } from "./pipeline/score";
 
@@ -19,8 +19,13 @@ export const fetchYouTube = onSchedule(
     secrets: [youtubeApiKey],
   },
   async () => {
-    const result = await fetchYouTubeForAllTopics();
-    console.log(`YouTube fetch complete: ${result.fetched} videos, ${result.errors.length} errors`);
+    // 1. Fetch for global/public homepage (super admin topics)
+    const globalResult = await fetchYouTubeForAllTopics();
+    console.log(`Global fetch: ${globalResult.fetched} videos, ${globalResult.errors.length} errors`);
+
+    // 2. Fetch for all users' personalized feeds (dedup + fan-out)
+    const userResult = await fetchYouTubeForAllUsers();
+    console.log(`User fetch: ${userResult.fetched} videos, ${userResult.fanOuts} fan-outs, ${userResult.errors.length} errors`);
   }
 );
 
@@ -36,7 +41,10 @@ export const rescoreVideos = onSchedule(
   },
   async () => {
     const updated = await rescoreAllVideos();
-    console.log(`Rescored ${updated} videos`);
+    console.log(`Rescored ${updated} global videos`);
+
+    const synced = await syncUserVideoScores();
+    console.log(`Synced ${synced} user video scores`);
   }
 );
 

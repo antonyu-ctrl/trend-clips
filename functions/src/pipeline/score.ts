@@ -57,3 +57,42 @@ export async function rescoreAllVideos(): Promise<number> {
 
   return count;
 }
+
+// Sync scores from global videos to user's userVideos subcollections
+export async function syncUserVideoScores(): Promise<number> {
+  // Use collectionGroup to get all userVideos across all users
+  const snap = await db.collectionGroup("userVideos").get();
+
+  let count = 0;
+  let batch = db.batch();
+  let batchCount = 0;
+
+  for (const userVideoDoc of snap.docs) {
+    const data = userVideoDoc.data();
+    const globalVideoId = data.videoId;
+
+    // Look up global video's score
+    const globalDoc = await db.collection("videos").doc(globalVideoId).get();
+    if (!globalDoc.exists) continue;
+
+    const globalScore = globalDoc.data()?.score || 0;
+
+    if (Math.abs(globalScore - (data.score || 0)) > 0.01) {
+      batch.update(userVideoDoc.ref, { score: globalScore });
+      count++;
+      batchCount++;
+    }
+
+    if (batchCount >= 490) {
+      await batch.commit();
+      batch = db.batch();
+      batchCount = 0;
+    }
+  }
+
+  if (batchCount > 0) {
+    await batch.commit();
+  }
+
+  return count;
+}

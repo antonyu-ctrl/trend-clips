@@ -1,6 +1,6 @@
 import axios from "axios";
 import { FieldValue } from "firebase-admin/firestore";
-import { db, upsertVideo, getActiveTopics } from "../utils/firestore";
+import { db, upsertVideo, getActiveTopics, getAllUserTopics, createUserVideoRef } from "../utils/firestore";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
@@ -193,4 +193,137 @@ export async function fetchYouTubeForAllTopics(): Promise<{
   }
 
   return { fetched: totalFetched, errors };
+}
+
+// --- Multi-user fetch: dedup queries across all users, fan out results ---
+
+interface QueryTarget {
+  userId: string;
+  topicId: string;
+  category: string;
+}
+
+export async function fetchYouTubeForAllUsers(): Promise<{
+  fetched: number;
+  fanOuts: number;
+  errors: string[];
+}> {
+  const apiKey = getApiKey();
+  const userTopics = await getAllUserTopics();
+
+  if (userTopics.length === 0) {
+    return { fetched: 0, fanOuts: 0, errors: [] };
+  }
+
+  // Build dedup map: queryString+language → list of {userId, topicId, category}
+  const queryMap = new Map<string, { languages: string[]; targets: QueryTarget[] }>();
+
+  for (const topic of userTopics) {
+    const languages = topic.languages?.length ? topic.languages : ["en"];
+    for (const q of topic.searchQueries) {
+      const key = q.toLowerCase().trim();
+      const existing = queryMap.get(key);
+      if (existing) {
+        existing.targets.push({
+          userId: topic.userId,
+          topicId: topic.id,
+          category: topic.defaultCategory,
+        });
+        // Merge languages
+        for (const lang of languages) {
+          if (!existing.languages.includes(lang)) {
+            existing.languages.push(lang);
+          }
+        }
+      } else {
+        queryMap.set(key, {
+          languages,
+          targets: [{
+            userId: topic.userId,
+            topicId: topic.id,
+            category: topic.defaultCategory,
+          }],
+        });
+      }
+    }
+  }
+
+  // Enforce daily quota: max 90 unique queries (leaving buffer)
+  const queries = Array.from(queryMap.entries());
+  // Sort by target count descending (popular queries first)
+  queries.sort((a, b) => b[1].targets.length - a[1].targets.length);
+  const budgetQueries = queries.slice(0, 90);
+
+  let totalFetched = 0;
+  let totalFanOuts = 0;
+  const errors: string[] = [];
+
+  for (const [queryStr, { languages, targets }] of budgetQueries) {
+    try {
+      // Search YouTube once per unique query (across all languages)
+      const allVideoIds = new Set<string>();
+      for (const lang of languages) {
+        const ids = await searchVideos(queryStr, apiKey, undefined, 10, lang);
+        ids.forEach((id) => allVideoIds.add(id));
+      }
+
+      const videoIds = Array.from(allVideoIds);
+      const videos = await getVideoDetails(videoIds, apiKey);
+
+      for (const video of videos) {
+        const viewCount = parseInt(video.statistics.viewCount || "0");
+        if (viewCount < 10000) continue;
+
+        const audioLang = video.snippet.defaultAudioLanguage?.toLowerCase();
+        if (audioLang && !languages.some((lang) => audioLang.startsWith(lang))) {
+          continue;
+        }
+
+        const thumbnail =
+          video.snippet.thumbnails.high?.url ||
+          video.snippet.thumbnails.medium?.url ||
+          video.snippet.thumbnails.default?.url ||
+          "";
+
+        const videoIsShort = isShort(video.contentDetails.duration);
+        const format = videoIsShort ? "short" : "clip";
+        const globalVideoId = `youtube_${video.id}`;
+
+        // Upsert into global videos collection
+        await upsertVideo("youtube", video.id, {
+          platform: "youtube",
+          platformVideoId: video.id,
+          embedUrl: `https://www.youtube.com/embed/${video.id}`,
+          title: video.snippet.title,
+          description: video.snippet.description.slice(0, 500),
+          thumbnailUrl: thumbnail,
+          category: targets[0].category, // Global category from first target
+          format,
+          tags: [queryStr, ...(video.snippet.tags || []).slice(0, 5).map((t) => t.toLowerCase())],
+          viewCount,
+          fetchedAt: FieldValue.serverTimestamp(),
+        });
+        totalFetched++;
+
+        // Fan out to each user's userVideos subcollection
+        for (const target of targets) {
+          await createUserVideoRef(
+            target.userId,
+            globalVideoId,
+            target.topicId,
+            target.category,
+            format,
+            0 // Score will be synced by rescoreUserVideos
+          );
+          totalFanOuts++;
+        }
+      }
+    } catch (err) {
+      const msg = `User fetch error for query "${queryStr}": ${err}`;
+      errors.push(msg);
+      console.error(msg);
+    }
+  }
+
+  return { fetched: totalFetched, fanOuts: totalFanOuts, errors };
 }

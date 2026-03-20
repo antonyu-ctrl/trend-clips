@@ -41,7 +41,10 @@ export interface Topic {
   searchQueries: string[];
   defaultCategory: string;
   isActive: boolean;
+  languages?: string[];
 }
+
+export type UserTier = "free" | "invited" | "pro";
 
 export interface UserProfile {
   id: string;
@@ -50,6 +53,27 @@ export interface UserProfile {
   avatarUrl: string;
   createdAt: Timestamp;
   isAdmin?: boolean;
+  tier: UserTier;
+  maxCategories: number;
+  maxTopics: number;
+  inviteCode?: string;
+}
+
+export interface UserVideo {
+  videoId: string;
+  topicId: string;
+  category: string;
+  addedAt: Timestamp;
+  score: number;
+}
+
+export interface InviteCode {
+  id: string;
+  createdBy: string;
+  createdAt: Timestamp;
+  usedBy?: string;
+  usedAt?: Timestamp;
+  isUsed: boolean;
 }
 
 export interface Favorite {
