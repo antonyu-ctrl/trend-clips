@@ -528,6 +528,45 @@ export async function getUserVideosByFormat(
   return { videos, lastDoc };
 }
 
+export async function getUserVideosByCategoryAndFormat(
+  userId: string,
+  categorySlug: string,
+  format: VideoFormat,
+  pageSize: number = 20,
+  cursor?: QueryDocumentSnapshot
+): Promise<{ videos: Video[]; lastDoc: QueryDocumentSnapshot | null }> {
+  let q = query(
+    userVideosRef(userId),
+    where("category", "==", categorySlug),
+    where("format", "==", format),
+    orderBy("score", "desc"),
+    limit(pageSize)
+  );
+  if (cursor) {
+    q = query(
+      userVideosRef(userId),
+      where("category", "==", categorySlug),
+      where("format", "==", format),
+      orderBy("score", "desc"),
+      startAfter(cursor),
+      limit(pageSize)
+    );
+  }
+  const snap = await getDocs(q);
+
+  const videos: Video[] = [];
+  for (const d of snap.docs) {
+    const uv = d.data() as UserVideo;
+    const videoDoc = await getDoc(doc(videosRef(), uv.videoId));
+    if (videoDoc.exists()) {
+      videos.push({ id: videoDoc.id, ...videoDoc.data() } as Video);
+    }
+  }
+
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+  return { videos, lastDoc };
+}
+
 // --- Invite Codes ---
 const inviteCodesRef = () => collection(getClientDb(), "inviteCodes");
 
