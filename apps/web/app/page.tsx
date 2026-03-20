@@ -8,14 +8,15 @@ import {
   getVideosByFormat,
   getCategories,
   getUserCategories,
-  getUserVideos,
-  getUserVideosByCategory,
+  getUserVideosByFormat,
+  getUserVideosByCategoryAndFormat,
 } from "@/lib/firebase/firestore";
 import { useAuth } from "@/lib/context/AuthContext";
 import type { Video, Category } from "@/lib/types";
 
 function PersonalizedFeed({ userId }: { userId: string }) {
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [clips, setClips] = useState<Video[]>([]);
+  const [shorts, setShorts] = useState<Video[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,12 +29,16 @@ function PersonalizedFeed({ userId }: { userId: string }) {
 
   useEffect(() => {
     setLoading(true);
-    const fetchVideos = activeCategory
-      ? getUserVideosByCategory(userId, activeCategory, 20)
-      : getUserVideos(userId, 20);
+    const fetchClips = activeCategory
+      ? getUserVideosByCategoryAndFormat(userId, activeCategory, "clip", 10)
+      : getUserVideosByFormat(userId, "clip", 10);
+    const fetchShorts = activeCategory
+      ? getUserVideosByCategoryAndFormat(userId, activeCategory, "short", 10)
+      : getUserVideosByFormat(userId, "short", 10);
 
-    fetchVideos.then((result) => {
-      setVideos(result.videos);
+    Promise.all([fetchClips, fetchShorts]).then(([clipsResult, shortsResult]) => {
+      setClips(clipsResult.videos);
+      setShorts(shortsResult.videos);
       setLoading(false);
     });
   }, [userId, activeCategory]);
@@ -42,8 +47,10 @@ function PersonalizedFeed({ userId }: { userId: string }) {
     return <LoadingSkeleton />;
   }
 
+  const hasNoVideos = clips.length === 0 && shorts.length === 0;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* User's category nav */}
       {categories.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2">
@@ -75,14 +82,7 @@ function PersonalizedFeed({ userId }: { userId: string }) {
 
       {loading ? (
         <LoadingSkeleton />
-      ) : videos.length > 0 ? (
-        <section>
-          <h2 className="mb-4 text-2xl font-bold text-text-primary">
-            🎯 Your Feed
-          </h2>
-          <VideoGrid videos={videos} format="clip" />
-        </section>
-      ) : (
+      ) : hasNoVideos ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-surface p-12 text-center">
           <div className="text-4xl">📭</div>
           <h2 className="text-lg font-semibold text-text-primary">
@@ -99,6 +99,42 @@ function PersonalizedFeed({ userId }: { userId: string }) {
             Manage Topics →
           </Link>
         </div>
+      ) : (
+        <>
+          {clips.length > 0 && (
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-text-primary">
+                  🎬 Your Clips
+                </h2>
+                <Link
+                  href="/clips"
+                  className="text-sm font-medium text-accent hover:text-accent/80 transition-colors"
+                >
+                  View all →
+                </Link>
+              </div>
+              <VideoGrid videos={clips} format="clip" />
+            </section>
+          )}
+
+          {shorts.length > 0 && (
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-text-primary">
+                  ⚡ Your Shorts
+                </h2>
+                <Link
+                  href="/shorts"
+                  className="text-sm font-medium text-accent hover:text-accent/80 transition-colors"
+                >
+                  View all →
+                </Link>
+              </div>
+              <VideoGrid videos={shorts} format="short" />
+            </section>
+          )}
+        </>
       )}
     </div>
   );
