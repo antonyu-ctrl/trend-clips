@@ -1,10 +1,8 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import { fetchYouTubeForAllTopics, fetchYouTubeForAllUsers } from "./fetchers/youtube";
 import { rescoreAllVideos, syncUserVideoScores } from "./pipeline/score";
 import { cleanupStaleVideos } from "./pipeline/cleanup";
-import { computeScore } from "./pipeline/score";
 
 const youtubeApiKey = defineSecret("YOUTUBE_API_KEY");
 
@@ -58,39 +56,5 @@ export const cleanupVideos = onSchedule(
   async () => {
     const result = await cleanupStaleVideos();
     console.log(`Cleanup: checked ${result.checked}, removed ${result.removed}`);
-  }
-);
-
-// --- Firestore Triggers ---
-
-// When a vote is written/updated/deleted, rescore the video
-export const onVoteChange = onDocumentWritten(
-  "votes/{voteId}",
-  async (event) => {
-    const data = event.data?.after?.data() || event.data?.before?.data();
-    if (!data) return;
-
-    const videoId = data.videoId;
-    if (!videoId) return;
-
-    const { getFirestore } = await import("firebase-admin/firestore");
-    const db = getFirestore();
-    const videoRef = db.collection("videos").doc(videoId);
-    const videoSnap = await videoRef.get();
-
-    if (!videoSnap.exists) return;
-
-    const videoData = videoSnap.data()!;
-    const nowSeconds = Date.now() / 1000;
-    const fetchedAt = videoData.fetchedAt?.seconds || nowSeconds;
-    const newScore = computeScore(
-      videoData.upvotes || 0,
-      videoData.downvotes || 0,
-      videoData.viewCount || 0,
-      fetchedAt,
-      nowSeconds
-    );
-
-    await videoRef.update({ score: newScore });
   }
 );

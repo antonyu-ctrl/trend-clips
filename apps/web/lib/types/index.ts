@@ -79,35 +79,12 @@ export interface InviteCode {
 export interface Favorite {
   userId: string;
   videoId: string;
-  createdAt: Timestamp;
-}
-
-export type VoteType = "up" | "down";
-
-export interface Vote {
-  userId: string;
-  videoId: string;
-  voteType: VoteType;
-}
-
-export interface Comment {
-  id: string;
-  videoId: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
-  text: string;
-  createdAt: Timestamp;
-}
-
-export type SuggestionStatus = "pending" | "approved" | "rejected";
-
-export interface Suggestion {
-  id: string;
-  userId: string;
-  url: string;
-  platform: Platform;
-  status: SuggestionStatus;
+  title: string;
+  thumbnailUrl: string;
+  embedUrl: string;
+  platform: string;
+  platformVideoId: string;
+  format: string;
   createdAt: Timestamp;
 }
 

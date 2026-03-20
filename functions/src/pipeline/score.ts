@@ -1,22 +1,14 @@
 import { db } from "../utils/firestore";
 
 export function computeScore(
-  upvotes: number,
-  downvotes: number,
   viewCount: number,
   createdAtSeconds: number,
   nowSeconds: number
 ): number {
-  const voteScore = (upvotes - downvotes) * 2;
-
-  // Recency is the primary factor (0-100 points, decays over 30 days)
   const daysSinceCreated = (nowSeconds - createdAtSeconds) / 86400;
   const recencyScore = Math.max(0, 100 - (daysSinceCreated * 100) / 30);
-
-  // View count is secondary (0-20 points, log scale)
   const viewScore = Math.min(20, Math.log10(viewCount + 1) * 2.5);
-
-  return recencyScore + viewScore + voteScore;
+  return recencyScore + viewScore;
 }
 
 export async function rescoreAllVideos(): Promise<number> {
@@ -33,8 +25,6 @@ export async function rescoreAllVideos(): Promise<number> {
     const data = doc.data();
     const fetchedAt = data.createdAt?.seconds || data.fetchedAt?.seconds || nowSeconds;
     const newScore = computeScore(
-      data.upvotes || 0,
-      data.downvotes || 0,
       data.viewCount || 0,
       fetchedAt,
       nowSeconds

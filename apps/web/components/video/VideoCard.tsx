@@ -17,7 +17,6 @@ interface VideoCardProps {
 export function VideoCard({ video, compact }: VideoCardProps) {
   const formatColor = getFormatColor(video.format);
   const formatLabel = getFormatLabel(video.format);
-  const netVotes = video.upvotes - video.downvotes;
 
   return (
     <Link href={`/video/${video.id}`} className="group block">
@@ -57,31 +56,15 @@ export function VideoCard({ video, compact }: VideoCardProps) {
             {video.title}
           </h3>
           {!compact && (
-            <div className="mt-2 flex items-center justify-between">
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1">
-                {video.tags.slice(0, 2).map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              {/* Votes */}
-              <span
-                className={`text-xs font-medium ${
-                  netVotes > 0
-                    ? "text-upvote"
-                    : netVotes < 0
-                      ? "text-downvote"
-                      : "text-text-muted"
-                }`}
-              >
-                {netVotes > 0 ? "+" : ""}
-                {netVotes}
-              </span>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {video.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
         </div>

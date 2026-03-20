@@ -95,12 +95,6 @@ export default function AdminDashboardPage() {
           >
             Manage Topics
           </a>
-          <a
-            href="/admin/suggestions"
-            className="rounded-lg bg-surface-hover px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface transition-colors border border-border"
-          >
-            Review Suggestions
-          </a>
         </div>
       </div>
     </div>

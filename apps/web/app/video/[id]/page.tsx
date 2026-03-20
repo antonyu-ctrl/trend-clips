@@ -3,9 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
-import { VoteButtons } from "@/components/video/VoteButtons";
 import { VideoGrid } from "@/components/video/VideoGrid";
-import { CommentList } from "@/components/comment/CommentList";
 import { getVideoById, getRelatedVideos } from "@/lib/firebase/firestore";
 import { getWatchUrl, getPlatformLabel, getFormatLabel, formatViewCount } from "@/lib/utils/embed";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -48,7 +46,15 @@ export default function VideoDetailPage({
   const handleToggleFavorite = async () => {
     if (!user || !video || togglingFav) return;
     setTogglingFav(true);
-    const result = await toggleFavorite(user.uid, video.id);
+    const result = await toggleFavorite(user.uid, {
+      id: video.id,
+      title: video.title,
+      thumbnailUrl: video.thumbnailUrl,
+      embedUrl: video.embedUrl,
+      platform: video.platform,
+      platformVideoId: video.platformVideoId,
+      format: video.format,
+    });
     setFavorited(result);
     setTogglingFav(false);
   };
@@ -105,11 +111,6 @@ export default function VideoDetailPage({
           </div>
 
           <div className="flex items-center gap-3">
-            <VoteButtons
-              videoId={video.id}
-              initialUpvotes={video.upvotes}
-              initialDownvotes={video.downvotes}
-            />
             {user && (
               <button
                 onClick={handleToggleFavorite}
@@ -148,8 +149,6 @@ export default function VideoDetailPage({
               {video.description}
             </p>
           )}
-
-          <CommentList videoId={video.id} />
         </div>
       </div>
 

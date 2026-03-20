@@ -11,7 +11,6 @@ import {
   setDoc,
   deleteDoc,
   updateDoc,
-  increment,
   serverTimestamp,
   type QueryDocumentSnapshot,
   type DocumentData,
@@ -21,11 +20,7 @@ import type {
   Video,
   VideoFormat,
   Category,
-  Comment,
-  Vote,
-  VoteType,
   Favorite,
-  Suggestion,
   Platform,
   UserProfile,
   UserVideo,
@@ -36,10 +31,7 @@ import type {
 // --- Collection refs (lazy to avoid SSG initialization) ---
 const videosRef = () => collection(getClientDb(), "videos");
 const categoriesRef = () => collection(getClientDb(), "categories");
-const commentsRef = () => collection(getClientDb(), "comments");
-const votesRef = () => collection(getClientDb(), "votes");
 const favoritesRef = () => collection(getClientDb(), "favorites");
-const suggestionsRef = () => collection(getClientDb(), "suggestions");
 const usersRef = () => collection(getClientDb(), "users");
 
 // --- Helper: convert Firestore doc to typed object ---
@@ -205,54 +197,6 @@ export async function getCategoryBySlug(
   return docToData<Category>(snap.docs[0]);
 }
 
-// --- Votes ---
-export function voteDocId(userId: string, videoId: string): string {
-  return `${userId}_${videoId}`;
-}
-
-export async function getUserVote(
-  userId: string,
-  videoId: string
-): Promise<Vote | null> {
-  const id = voteDocId(userId, videoId);
-  const snap = await getDoc(doc(votesRef(), id));
-  if (!snap.exists()) return null;
-  return snap.data() as Vote;
-}
-
-export async function castVote(
-  userId: string,
-  videoId: string,
-  voteType: VoteType
-): Promise<void> {
-  const id = voteDocId(userId, videoId);
-  const existing = await getUserVote(userId, videoId);
-  const videoDoc = doc(videosRef(), videoId);
-
-  if (existing) {
-    if (existing.voteType === voteType) {
-      // Remove vote
-      await deleteDoc(doc(votesRef(), id));
-      const field = voteType === "up" ? "upvotes" : "downvotes";
-      await updateDoc(videoDoc, { [field]: increment(-1) });
-    } else {
-      // Switch vote
-      await setDoc(doc(votesRef(), id), { userId, videoId, voteType });
-      const incField = voteType === "up" ? "upvotes" : "downvotes";
-      const decField = voteType === "up" ? "downvotes" : "upvotes";
-      await updateDoc(videoDoc, {
-        [incField]: increment(1),
-        [decField]: increment(-1),
-      });
-    }
-  } else {
-    // New vote
-    await setDoc(doc(votesRef(), id), { userId, videoId, voteType });
-    const field = voteType === "up" ? "upvotes" : "downvotes";
-    await updateDoc(videoDoc, { [field]: increment(1) });
-  }
-}
-
 // --- Favorites ---
 export function favoriteDocId(userId: string, videoId: string): string {
   return `${userId}_${videoId}`;
@@ -268,17 +212,23 @@ export async function isFavorited(
 
 export async function toggleFavorite(
   userId: string,
-  videoId: string
+  video: { id: string; title: string; thumbnailUrl: string; embedUrl: string; platform: string; platformVideoId: string; format: string }
 ): Promise<boolean> {
-  const id = favoriteDocId(userId, videoId);
-  const exists = await isFavorited(userId, videoId);
+  const id = favoriteDocId(userId, video.id);
+  const exists = await isFavorited(userId, video.id);
   if (exists) {
     await deleteDoc(doc(favoritesRef(), id));
     return false;
   } else {
     await setDoc(doc(favoritesRef(), id), {
       userId,
-      videoId,
+      videoId: video.id,
+      title: video.title,
+      thumbnailUrl: video.thumbnailUrl,
+      embedUrl: video.embedUrl,
+      platform: video.platform,
+      platformVideoId: video.platformVideoId,
+      format: video.format,
       createdAt: serverTimestamp(),
     });
     return true;
@@ -293,52 +243,6 @@ export async function getUserFavorites(userId: string): Promise<Favorite[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as Favorite);
-}
-
-// --- Comments ---
-export async function getComments(videoId: string): Promise<Comment[]> {
-  const q = query(
-    commentsRef(),
-    where("videoId", "==", videoId),
-    orderBy("createdAt", "desc"),
-    limit(50)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => docToData<Comment>(d));
-}
-
-export async function addComment(
-  videoId: string,
-  userId: string,
-  userName: string,
-  userAvatar: string,
-  text: string
-): Promise<void> {
-  const ref = doc(commentsRef());
-  await setDoc(ref, {
-    videoId,
-    userId,
-    userName,
-    userAvatar,
-    text,
-    createdAt: serverTimestamp(),
-  });
-}
-
-// --- Suggestions ---
-export async function submitSuggestion(
-  userId: string,
-  url: string,
-  platform: Platform
-): Promise<void> {
-  const ref = doc(suggestionsRef());
-  await setDoc(ref, {
-    userId,
-    url,
-    platform,
-    status: "pending",
-    createdAt: serverTimestamp(),
-  });
 }
 
 // --- User Profile ---
@@ -443,27 +347,6 @@ export async function updateVideoStatus(
   status: "active" | "unavailable" | "removed"
 ): Promise<void> {
   await updateDoc(doc(videosRef(), videoId), { status });
-}
-
-// --- Admin: Suggestions ---
-export async function getSuggestions(
-  statusFilter?: "pending" | "approved" | "rejected"
-): Promise<Suggestion[]> {
-  let q;
-  if (statusFilter) {
-    q = query(suggestionsRef(), where("status", "==", statusFilter), orderBy("createdAt", "desc"), limit(100));
-  } else {
-    q = query(suggestionsRef(), orderBy("createdAt", "desc"), limit(100));
-  }
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => docToData<Suggestion>(d));
-}
-
-export async function updateSuggestionStatus(
-  sugId: string,
-  status: "approved" | "rejected"
-): Promise<void> {
-  await updateDoc(doc(suggestionsRef(), sugId), { status });
 }
 
 // --- User Profile with tier ---
@@ -706,4 +589,34 @@ export async function getInviteCodes(): Promise<InviteCode[]> {
 export async function getAllUsers(): Promise<UserProfile[]> {
   const snap = await getDocs(query(usersRef(), orderBy("createdAt", "desc")));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as UserProfile));
+}
+
+// --- Clone public data to new user ---
+export async function clonePublicDataToUser(userId: string): Promise<void> {
+  // Check if user already has categories
+  const existingCats = await getUserCategories(userId);
+  if (existingCats.length > 0) return; // Already set up
+
+  // Clone global categories
+  const globalCats = await getCategories();
+  for (const cat of globalCats) {
+    await setDoc(doc(collection(getClientDb(), "users", userId, "categories"), cat.id), {
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description,
+      order: cat.order,
+    });
+  }
+
+  // Clone global topics
+  const globalTopics = await getTopics();
+  for (const topic of globalTopics) {
+    await setDoc(doc(collection(getClientDb(), "users", userId, "topics"), topic.id), {
+      name: topic.name,
+      searchQueries: topic.searchQueries,
+      defaultCategory: topic.defaultCategory,
+      isActive: topic.isActive,
+      languages: (topic as any).languages || ["en"],
+    });
+  }
 }

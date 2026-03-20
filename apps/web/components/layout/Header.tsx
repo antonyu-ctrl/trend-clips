@@ -58,12 +58,6 @@ export function Header() {
                   Favorites
                 </Link>
                 <Link
-                  href="/suggest"
-                  className="text-sm text-text-secondary transition-colors hover:text-text-primary"
-                >
-                  Submit
-                </Link>
-                <Link
                   href="/dashboard"
                   className="rounded-md bg-accent/10 px-3 py-1 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
                 >
@@ -169,13 +163,6 @@ export function Header() {
                   className="block rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
                 >
                   Favorites
-                </Link>
-                <Link
-                  href="/suggest"
-                  onClick={() => setMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
-                >
-                  Submit
                 </Link>
                 <Link
                   href="/dashboard"

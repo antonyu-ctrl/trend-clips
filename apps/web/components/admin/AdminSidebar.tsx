@@ -9,7 +9,6 @@ const navItems = [
   { href: "/admin/categories", label: "Categories", icon: "📁" },
   { href: "/admin/topics", label: "Topics", icon: "🔍" },
   { href: "/admin/videos", label: "Videos", icon: "🎬" },
-  { href: "/admin/suggestions", label: "Suggestions", icon: "💡" },
 ];
 
 export function AdminSidebar() {

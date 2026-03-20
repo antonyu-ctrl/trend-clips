@@ -10,7 +10,6 @@ const navItems = [
   { label: "Invite Codes", href: "/super-admin/invites" },
   { label: "Users", href: "/super-admin/users" },
   { label: "Videos", href: "/super-admin/videos" },
-  { label: "Suggestions", href: "/super-admin/suggestions" },
 ];
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
