@@ -70,20 +70,6 @@
       ]
     },
     {
-      "collectionGroup": "topics",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "isActive", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "userVideos",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "score", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "userVideos",
       "queryScope": "COLLECTION",
       "fields": [
