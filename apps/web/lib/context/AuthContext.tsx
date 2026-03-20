@@ -15,7 +15,7 @@ import {
   type User,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
-import { createOrUpdateUserProfile, getUserProfile, clonePublicDataToUser } from "@/lib/firebase/firestore";
+import { createOrUpdateUserProfile, getUserProfile } from "@/lib/firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 
 interface AuthContextValue {
@@ -56,9 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: firebaseUser.email || "",
           avatarUrl: firebaseUser.photoURL || "",
         });
-
-        // Clone global categories/topics to new users (no-op if already set up)
-        await clonePublicDataToUser(firebaseUser.uid);
 
         const profile = await getUserProfile(firebaseUser.uid);
         setUserProfile(profile);

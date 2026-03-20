@@ -112,7 +112,7 @@ function NoCategoriesBanner() {
           Customize your feed
         </h3>
         <p className="text-sm text-text-secondary">
-          Create categories and topics to get a personalized video feed.
+          Create your own categories and topics to get a personalized video feed. The public clips below will be replaced by your own selections.
         </p>
       </div>
       <Link
@@ -120,6 +120,26 @@ function NoCategoriesBanner() {
         className="whitespace-nowrap rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
       >
         Get Started →
+      </Link>
+    </div>
+  );
+}
+
+function EmptyFeedState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="mb-4 text-5xl">📂</div>
+      <h2 className="mb-2 text-xl font-semibold text-text-primary">
+        No categories yet
+      </h2>
+      <p className="mb-6 max-w-md text-text-secondary">
+        Add categories and topics to start seeing your personalized video feed.
+      </p>
+      <Link
+        href="/dashboard/categories"
+        className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-accent/90"
+      >
+        Add Categories →
       </Link>
     </div>
   );
@@ -220,7 +240,7 @@ function LoadingSkeleton() {
 }
 
 export default function HomePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const [userHasCategories, setUserHasCategories] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -244,11 +264,6 @@ export default function HomePage() {
   // Signed in, has categories → personalized feed
   if (userHasCategories) return <PersonalizedFeed userId={user.uid} />;
 
-  // Signed in, 0 categories → global feed + banner
-  return (
-    <>
-      <NoCategoriesBanner />
-      <GlobalFeed />
-    </>
-  );
+  // Signed in, no categories → empty state (user starts fresh)
+  return <EmptyFeedState />;
 }

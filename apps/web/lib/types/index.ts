@@ -57,6 +57,7 @@ export interface UserProfile {
   maxCategories: number;
   maxTopics: number;
   inviteCode?: string;
+  feedInitialized?: boolean;
 }
 
 export interface UserVideo {

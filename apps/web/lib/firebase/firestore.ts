@@ -593,9 +593,9 @@ export async function getAllUsers(): Promise<UserProfile[]> {
 
 // --- Clone public data to new user ---
 export async function clonePublicDataToUser(userId: string): Promise<void> {
-  // Check if user already has categories
-  const existingCats = await getUserCategories(userId);
-  if (existingCats.length > 0) return; // Already set up
+  // Check if user already initialized their feed (even if they later deleted all categories)
+  const userDoc = await getDoc(doc(usersRef(), userId));
+  if (userDoc.exists() && userDoc.data()?.feedInitialized) return; // Already initialized, don't re-clone
 
   // Clone global categories
   const globalCats = await getCategories();
@@ -619,4 +619,7 @@ export async function clonePublicDataToUser(userId: string): Promise<void> {
       languages: (topic as any).languages || ["en"],
     });
   }
+
+  // Mark feed as initialized so we never re-clone
+  await setDoc(doc(usersRef(), userId), { feedInitialized: true }, { merge: true });
 }
