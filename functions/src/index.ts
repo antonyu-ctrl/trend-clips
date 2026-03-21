@@ -19,12 +19,20 @@ export const fetchYouTube = onSchedule(
   },
   async () => {
     // 1. Fetch for global/public homepage (super admin topics)
-    const globalResult = await fetchYouTubeForAllTopics();
-    console.log(`Global fetch: ${globalResult.fetched} videos, ${globalResult.errors.length} errors`);
+    try {
+      const globalResult = await fetchYouTubeForAllTopics();
+      console.log(`Global fetch: ${globalResult.fetched} videos, ${globalResult.errors.length} errors`);
+    } catch (err) {
+      console.error("Global fetch failed:", err);
+    }
 
     // 2. Fetch for all users' personalized feeds (dedup + fan-out)
-    const userResult = await fetchYouTubeForAllUsers();
-    console.log(`User fetch: ${userResult.fetched} videos, ${userResult.fanOuts} fan-outs, ${userResult.errors.length} errors`);
+    try {
+      const userResult = await fetchYouTubeForAllUsers();
+      console.log(`User fetch: ${userResult.fetched} videos, ${userResult.fanOuts} fan-outs, ${userResult.errors.length} errors`);
+    } catch (err) {
+      console.error("User fetch failed:", err);
+    }
   }
 );
 
