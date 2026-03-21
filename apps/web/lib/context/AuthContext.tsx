@@ -10,6 +10,8 @@ import {
 import {
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   type User,
@@ -41,6 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  // Handle redirect result on page load (for in-app browsers that don't support popups)
+  useEffect(() => {
+    getRedirectResult(getClientAuth()).catch((err) => {
+      console.error("Redirect sign-in error:", err);
+    });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getClientAuth(), async (firebaseUser) => {
@@ -75,12 +84,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    const auth = getClientAuth();
+
+    // Detect in-app browsers (LINE, Instagram, Facebook, etc.) that don't support popups
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isInAppBrowser = /Line|LIFF|Instagram|FBAN|FBAV|Twitter|MicroMessenger/i.test(ua);
+
+    if (isInAppBrowser) {
+      // Use redirect for in-app browsers where popups are blocked
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+
     try {
-      await signInWithPopup(getClientAuth(), provider);
+      await signInWithPopup(auth, provider);
     } catch (err: unknown) {
-      // If popup is blocked or closed, log but don't crash
       const error = err as { code?: string };
-      if (error.code !== "auth/popup-closed-by-user") {
+      if (error.code === "auth/popup-blocked" || error.code === "auth/cancelled-popup-request") {
+        // Popup was blocked — fall back to redirect
+        await signInWithRedirect(auth, provider);
+      } else if (error.code !== "auth/popup-closed-by-user") {
         console.error("Sign-in error:", err);
       }
     }
