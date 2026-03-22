@@ -98,6 +98,12 @@
   "categories.noCategories": "No categories yet. Create one above.",
   "categories.deleteConfirm": "Delete this category? Videos in this category won't be removed.",
   "categories.saving": "Saving...",
+  "categories.update": "Update",
+  "categories.create": "Create",
+  "categories.cancel": "Cancel",
+  "categories.confirmDelete": "Delete this category? Videos in this category won't be removed.",
+  "categories.description": "Description",
+  "categories.empty": "No categories yet. Create one above.",
   "categories.edit": "Edit",
   "categories.delete": "Delete",
 

@@ -98,6 +98,12 @@
   "categories.noCategories": "카테고리가 없습니다. 위에서 만들어 보세요.",
   "categories.deleteConfirm": "이 카테고리를 삭제하시겠습니까? 이 카테고리의 영상은 삭제되지 않습니다.",
   "categories.saving": "저장 중...",
+  "categories.update": "수정",
+  "categories.create": "만들기",
+  "categories.cancel": "취소",
+  "categories.confirmDelete": "이 카테고리를 삭제하시겠습니까? 이 카테고리의 영상은 삭제되지 않습니다.",
+  "categories.description": "설명",
+  "categories.empty": "카테고리가 없습니다. 위에서 만들어 보세요.",
   "categories.edit": "수정",
   "categories.delete": "삭제",
 
