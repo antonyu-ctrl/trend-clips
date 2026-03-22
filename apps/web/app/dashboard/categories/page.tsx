@@ -74,20 +74,21 @@ export default function DashboardCategoriesPage() {
   }
 
   async function handleSave() {
-    if (!formName || !formSlug || !user) return;
+    const slug = editing ? formSlug : formName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    if (!formName || !slug || !user) return;
     setSaving(true);
     try {
       if (editing) {
         await updateUserCategory(user.uid, editing, {
           name: formName,
-          slug: formSlug,
+          slug,
           description: formDescription,
           order: formOrder,
         });
       } else {
         await createUserCategory(user.uid, {
           name: formName,
-          slug: formSlug,
+          slug,
           description: formDescription,
           order: formOrder,
         });
@@ -162,16 +163,6 @@ export default function DashboardCategoriesPage() {
                 placeholder="e.g. AI & Tech"
               />
             </div>
-            <div>
-              <label className="mb-1 block text-sm text-text-secondary">{t("categories.slug")}</label>
-              <input
-                type="text"
-                value={formSlug}
-                onChange={(e) => setFormSlug(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
-                placeholder="e.g. ai-tech"
-              />
-            </div>
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm text-text-secondary">{t("categories.description")}</label>
               <input
@@ -182,20 +173,11 @@ export default function DashboardCategoriesPage() {
                 placeholder="Short description of this category"
               />
             </div>
-            <div>
-              <label className="mb-1 block text-sm text-text-secondary">{t("categories.order")}</label>
-              <input
-                type="number"
-                value={formOrder}
-                onChange={(e) => setFormOrder(parseInt(e.target.value) || 0)}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
-              />
-            </div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              disabled={saving || !formName || !formSlug}
+              disabled={saving || !formName}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 transition-colors"
             >
               {saving ? t("categories.saving") : editing ? t("categories.update") : t("categories.create")}
@@ -219,10 +201,9 @@ export default function DashboardCategoriesPage() {
           >
             <div>
               <div className="font-medium text-text-primary">{cat.name}</div>
-              <div className="text-sm text-text-muted">
-                /{cat.slug} · Order: {cat.order}
-                {cat.description && ` · ${cat.description}`}
-              </div>
+              {cat.description && (
+                <div className="text-sm text-text-muted">{cat.description}</div>
+              )}
             </div>
             <div className="flex gap-2">
               <button
