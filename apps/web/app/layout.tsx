@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { I18nProvider } from "@/lib/i18n/I18nContext";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "TrendClips — Trending YouTube Clips & Shorts",
@@ -17,13 +18,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen bg-background antialiased">
+      <body className="min-h-screen bg-background antialiased flex flex-col">
         <I18nProvider>
           <AuthProvider>
             <Header />
-            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
               {children}
             </main>
+            <Footer />
           </AuthProvider>
         </I18nProvider>
       </body>
