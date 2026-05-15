@@ -157,6 +157,9 @@
   "videos.noVideosYet": "No videos yet",
   "videos.noVideosDesc": "Videos will appear here after the next fetch cycle (every 6 hours). Make sure you have active topics with search queries.",
   "videos.manageTopics": "Manage Topics →",
+  "videos.allFormats": "All Formats",
+  "videos.clips": "Clips",
+  "videos.shorts": "Shorts",
 
   "settings.account": "Account",
   "settings.name": "Name:",

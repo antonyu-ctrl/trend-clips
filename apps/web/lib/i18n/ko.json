@@ -157,6 +157,9 @@
   "videos.noVideosYet": "영상이 아직 없습니다",
   "videos.noVideosDesc": "다음 가져오기 주기(6시간마다) 후에 영상이 여기에 표시됩니다. 검색 쿼리가 있는 활성 주제가 있는지 확인하세요.",
   "videos.manageTopics": "주제 관리 →",
+  "videos.allFormats": "전체 형식",
+  "videos.clips": "클립",
+  "videos.shorts": "쇼츠",
 
   "settings.account": "계정",
   "settings.name": "이름:",
