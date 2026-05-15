@@ -22,7 +22,7 @@ export default function UsersPage() {
   return (
     <div>
       <h2 className="mb-6 text-lg font-semibold text-text-primary">
-        {t("adminUsers.title")} ({users.length})
+        {t("adminUsers.allUsers", { count: users.length })}
       </h2>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">

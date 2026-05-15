@@ -34,8 +34,8 @@ export default function SettingsPage() {
           <p><span className="font-medium text-text-primary">{t("settings.name")}:</span> {userProfile?.displayName}</p>
           <p><span className="font-medium text-text-primary">{t("settings.email")}:</span> {userProfile?.email}</p>
           <p><span className="font-medium text-text-primary">{t("settings.tier")}:</span> <span className="capitalize">{userProfile?.tier === "admin" ? t("settings.superAdmin") : userProfile?.tier || "free"}</span></p>
-          <p><span className="font-medium text-text-primary">{t("settings.categoriesLabel")}:</span> {userProfile?.tier === "admin" ? t("settings.unlimited") : `${userProfile?.maxCategories || 3} max`}</p>
-          <p><span className="font-medium text-text-primary">{t("settings.topicsLabel")}:</span> {userProfile?.tier === "admin" ? t("settings.unlimited") : `${userProfile?.maxTopics || 3} max`}</p>
+          <p><span className="font-medium text-text-primary">{t("settings.categoriesLabel")}:</span> {userProfile?.tier === "admin" ? t("settings.unlimited") : t("settings.max", { max: userProfile?.maxCategories || 3 })}</p>
+          <p><span className="font-medium text-text-primary">{t("settings.topicsLabel")}:</span> {userProfile?.tier === "admin" ? t("settings.unlimited") : t("settings.max", { max: userProfile?.maxTopics || 3 })}</p>
         </div>
       </div>
 

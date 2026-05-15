@@ -166,7 +166,9 @@
   "settings.email": "Email:",
   "settings.tier": "Tier:",
   "settings.categories": "Categories:",
+  "settings.categoriesLabel": "Categories",
   "settings.topicsPerCategory": "Topics per category:",
+  "settings.topicsLabel": "Topics per category",
   "settings.unlimited": "Unlimited",
   "settings.max": "{max} max",
   "settings.redeemTitle": "Redeem Invite Code",
@@ -176,6 +178,7 @@
   "settings.redeeming": "Redeeming...",
   "settings.redeemSuccess": "Invite code redeemed! Your account has been upgraded. Please refresh the page.",
   "settings.redeemError": "Invalid or already used invite code.",
+  "settings.redeemFailed": "Failed to redeem invite code. Please try again.",
   "settings.superAdmin": "Super Admin",
 
   "admin.title": "Super Admin",
@@ -193,9 +196,13 @@
   "adminUsers.email": "Email",
   "adminUsers.tier": "Tier",
   "adminUsers.inviteCode": "Invite Code",
+  "adminUsers.free": "Free",
+  "adminUsers.pro": "Pro",
+  "adminUsers.superAdmin": "Super Admin",
 
   "adminInvites.title": "Invite Codes",
   "adminInvites.generate": "Generate Code",
+  "adminInvites.generateCode": "Generate Code",
   "adminInvites.creating": "Creating...",
   "adminInvites.code": "Code",
   "adminInvites.status": "Status",
@@ -203,6 +210,7 @@
   "adminInvites.used": "Used",
   "adminInvites.available": "Available",
   "adminInvites.noCodes": "No invite codes yet. Click \"Generate Code\" to create one.",
+  "adminInvites.empty": "No invite codes yet. Click \"Generate Code\" to create one.",
 
   "metadata.title": "TrendClips — Trending YouTube Clips & Shorts",
   "metadata.description": "Discover the best trending YouTube clips and Shorts, organized by topic and ranked by popularity."

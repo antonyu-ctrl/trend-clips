@@ -166,7 +166,9 @@
   "settings.email": "이메일:",
   "settings.tier": "등급:",
   "settings.categories": "카테고리:",
+  "settings.categoriesLabel": "카테고리",
   "settings.topicsPerCategory": "카테고리당 주제:",
+  "settings.topicsLabel": "카테고리당 주제",
   "settings.unlimited": "무제한",
   "settings.max": "최대 {max}개",
   "settings.redeemTitle": "초대 코드 입력",
@@ -176,6 +178,7 @@
   "settings.redeeming": "처리 중...",
   "settings.redeemSuccess": "초대 코드가 사용되었습니다! 계정이 업그레이드되었습니다. 페이지를 새로고침해 주세요.",
   "settings.redeemError": "유효하지 않거나 이미 사용된 초대 코드입니다.",
+  "settings.redeemFailed": "초대 코드 사용에 실패했습니다. 다시 시도해 주세요.",
   "settings.superAdmin": "최고 관리자",
 
   "admin.title": "최고 관리자",
@@ -193,9 +196,13 @@
   "adminUsers.email": "이메일",
   "adminUsers.tier": "등급",
   "adminUsers.inviteCode": "초대 코드",
+  "adminUsers.free": "무료",
+  "adminUsers.pro": "프로",
+  "adminUsers.superAdmin": "최고 관리자",
 
   "adminInvites.title": "초대 코드",
   "adminInvites.generate": "코드 생성",
+  "adminInvites.generateCode": "코드 생성",
   "adminInvites.creating": "생성 중...",
   "adminInvites.code": "코드",
   "adminInvites.status": "상태",
@@ -203,6 +210,7 @@
   "adminInvites.used": "사용됨",
   "adminInvites.available": "사용 가능",
   "adminInvites.noCodes": "초대 코드가 없습니다. \"코드 생성\"을 클릭하여 만드세요.",
+  "adminInvites.empty": "초대 코드가 없습니다. \"코드 생성\"을 클릭하여 만드세요.",
 
   "metadata.title": "TrendClips — 트렌딩 YouTube 클립 & 쇼츠",
   "metadata.description": "주제별로 정리되고 인기순으로 순위가 매겨진 최고의 트렌딩 YouTube 클립과 쇼츠를 발견하세요."
