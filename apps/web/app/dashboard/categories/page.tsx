@@ -125,7 +125,7 @@ export default function DashboardCategoriesPage() {
           <h2 className="text-lg font-semibold text-text-primary">{t("categories.title")}</h2>
           {userProfile?.tier === "free" && (
             <p className="text-sm text-text-secondary">
-              {categories.length}/{(userProfile.maxCategories || 3)} {t("categories.used")}
+              {t("categories.used", { count: categories.length, max: userProfile.maxCategories || 3 })}
             </p>
           )}
         </div>

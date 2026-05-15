@@ -183,7 +183,7 @@ export default function DashboardTopicsPage() {
           <p className="text-sm text-text-secondary">
             {t("topics.description")}
             {userProfile?.tier === "free" && (
-              <> ({topics.length}/{userProfile.maxTopics} {t("topics.used")})</>
+              <> {t("topics.used", { count: topics.length, max: userProfile.maxTopics })}</>
             )}
           </p>
         </div>
