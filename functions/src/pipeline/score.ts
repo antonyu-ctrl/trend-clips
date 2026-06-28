@@ -18,8 +18,9 @@ export async function rescoreAllVideos(): Promise<number> {
     .where("status", "==", "active")
     .get();
 
-  const batch = db.batch();
+  let batch = db.batch();
   let count = 0;
+  let batchCount = 0;
 
   for (const doc of snap.docs) {
     const data = doc.data();
@@ -33,15 +34,19 @@ export async function rescoreAllVideos(): Promise<number> {
     if (Math.abs(newScore - (data.score || 0)) > 0.01) {
       batch.update(doc.ref, { score: newScore });
       count++;
+      batchCount++;
     }
 
-    // Firestore batch limit is 500
-    if (count > 0 && count % 490 === 0) {
+    // Firestore batch limit is 500 — commit and start a fresh batch.
+    // A committed batch cannot be reused, so we must reassign it.
+    if (batchCount >= 490) {
       await batch.commit();
+      batch = db.batch();
+      batchCount = 0;
     }
   }
 
-  if (count % 490 !== 0) {
+  if (batchCount > 0) {
     await batch.commit();
   }
 

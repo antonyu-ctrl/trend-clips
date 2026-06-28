@@ -39,12 +39,15 @@ function getApiKey(): string {
 }
 
 function isShort(duration: string): boolean {
-  // ISO 8601 duration: PT1M30S, PT45S, etc.
-  const match = duration.match(/PT(?:(\d+)M)?(?:(\d+)S)?/);
+  // ISO 8601 duration: PT1H23M45S, PT1M30S, PT45S, etc.
+  // Must capture hours too — without it, any video >= 1h matches only "PT"
+  // and is wrongly treated as a 0-second short.
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!match) return false;
-  const minutes = parseInt(match[1] || "0");
-  const seconds = parseInt(match[2] || "0");
-  return minutes * 60 + seconds <= 60;
+  const hours = parseInt(match[1] || "0");
+  const minutes = parseInt(match[2] || "0");
+  const seconds = parseInt(match[3] || "0");
+  return hours * 3600 + minutes * 60 + seconds <= 60;
 }
 
 async function searchVideos(

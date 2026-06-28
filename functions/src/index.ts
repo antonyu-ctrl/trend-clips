@@ -47,11 +47,21 @@ export const rescoreVideos = onSchedule(
     timeoutSeconds: 120,
   },
   async () => {
-    const updated = await rescoreAllVideos();
-    console.log(`Rescored ${updated} global videos`);
+    // Run the two steps independently so a failure in one does not
+    // prevent the other (previously a rescore crash blocked score sync).
+    try {
+      const updated = await rescoreAllVideos();
+      console.log(`Rescored ${updated} global videos`);
+    } catch (err) {
+      console.error("rescoreAllVideos failed:", err);
+    }
 
-    const synced = await syncUserVideoScores();
-    console.log(`Synced ${synced} user video scores`);
+    try {
+      const synced = await syncUserVideoScores();
+      console.log(`Synced ${synced} user video scores`);
+    } catch (err) {
+      console.error("syncUserVideoScores failed:", err);
+    }
   }
 );
 
